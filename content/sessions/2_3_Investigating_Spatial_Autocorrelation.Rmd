@@ -1,0 +1,645 @@
+---
+title: "Introduction to Geospatial Techniques for Social Scientists in R"
+subtitle: "Investigating Spatial Autocorrelation"
+author: "Stefan Jünger & Anne-Kathrin Stroppe"
+date: June 07, 2022
+institute: |
+  GESIS Workshop
+presenter: Anne
+editor_options: 
+  chunk_output_type: console
+---
+layout: true
+
+```{r child = "./content/config/sessions_setup.Rmd"}
+```
+
+---
+
+## Now
+
+```{r course-content-now, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(8, background = "yellow")
+```
+
+---
+
+## Thus far
+
+We've done some
+- wrangling,
+- mapping,
+- and linking of geospatial data (with georeferenced survey data)
+
+
+We've seen that geospatial data are
+- relevant to provide context
+  - as social scientists, we know that space is important!
+- nice to look at
+  - we can tell a story
+
+**However, geospatial data can be interesting on their own for social science studies!**
+
+---
+
+## Tobler's first law of geography
+
+> [E]verything is related to everything else, but near things are more related than distant things (Tobler 1970, p. 236)
+
+This means nearby geographical regions, institutions, or people are more similar to each other or do have a stronger influence on each other.
+
+**What we get is an interdependent system.**
+
+---
+
+## Spatial Interdependence or Autocorrelation
+
+Tobler's law is the fundamental principle of doing spatial analysis. We want to know
+
+1. if observations in our data are spatially interdependent
+2. and how this interdependence can be explained (= data generation process)
+
+---
+
+## Developing a model of connectiveness: the chess board
+
+.pull-left[
+.center[
+```{r random, echo = F}
+woRkshoptools::include_picture("random.png")
+```
+]
+]
+
+--
+
+.pull-right[
+.center[
+```{r npn-random, echo = F}
+woRkshoptools::include_picture("non_random.png")
+```
+]
+]
+
+---
+
+## Rook and queen neighborhoods
+
+.pull-left[
+.center[
+```{r rook, echo = F}
+woRkshoptools::include_picture("rook.png")
+```
+]
+]
+
+--
+
+.pull-right[
+.center[
+```{r queen, echo = F}
+woRkshoptools::include_picture("queen.png")
+```
+]
+]
+
+---
+## It's an interdependent system
+
+.pull-left[
+.center[
+```{r rook-i, echo = F}
+woRkshoptools::include_picture("rook_interdependent.png")
+```
+]
+]
+
+
+.pull-right[
+.center[
+```{r queen-i, echo = F}
+woRkshoptools::include_picture("queen_interdependent.png")
+```
+]
+]
+
+---
+
+## Let's do it hands-on: Our 'research' question
+
+Say, we are interested in AfD voting outcomes in relation to ethnic compositions of neighborhoods
+- combination of far-right voting research with Allport's classic contact theory
+- we are just doing it in the Urban context of Cologne (again)
+
+---
+
+## Voting districts
+
+```{r load-voting-districts}
+voting_districts <-
+  glue::glue(
+    "https://geoportal.stadt-koeln.de/arcgis/rest/services/Basiskarten/kgg/\\
+    MapServer/20/query?where=objectid+is+not+null&text=&objectIds=&time=&\\
+    geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=\\
+    esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&\\
+    outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=\\
+    &geometryPrecision=&outSR=4326&havingClause=&returnIdsOnly=false&return\\
+    CountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=\\
+    &returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinct\\
+    Values=false&resultOffset=&resultRecordCount=&returnExtentOnly=false&datum\\
+    Transformation=&parameterValues=&rangeValues=&quantizationParameters=&\\
+    featureEncoding=esriDefault&f=geojson"
+  ) %>% 
+  sf::st_read(as_tibble = TRUE, quiet = TRUE) %>%
+  sf::st_transform(3035) %>% 
+  dplyr::transmute(Stimmbezirk = as.numeric(nummer))
+
+head(voting_districts, 2)
+```
+
+---
+
+## AfD vote share
+
+```{r afd-vote-share}
+afd_votes <-
+  glue::glue(
+    "https://www.stadt-koeln.de/wahlen/bundestagswahl/09-2021/praesentation/\\
+    Open-Data-Bundestagswahl476.csv"
+  ) %>% 
+  readr::read_csv2() %>%
+  dplyr::transmute(Stimmbezirk = `gebiet-nr`, afd_share = (F1 / F) * 100)
+
+head(afd_votes, 2)
+```
+
+---
+
+## Simple ID matching to link data
+
+```{r link-data}
+election_results <-
+  dplyr::left_join(
+    voting_districts,
+    afd_votes,
+    by = "Stimmbezirk"
+  )
+
+head(election_results, 2)
+```
+
+---
+
+## Do vote shares spatially cluster?
+
+.pull-left[
+```{r does-it-cluster, eval = F}
+tm_shape(election_results) +
+  tm_polygons(
+    "afd_share",
+    palette = "viridis"
+  ) 
+```
+]
+
+.pull-right[
+.center[
+```{r does-it-cluster-show, echo = F}
+tm_shape(election_results) +
+  tm_polygons(
+    "afd_share",
+    palette = "viridis"
+  ) 
+```
+]
+]
+
+---
+
+## Pull in German Census data
+
+```{r load-census-data}
+immigrants_cologne <-
+  z11::z11_get_100m_attribute(STAATSANGE_KURZ_2) %>%
+  terra::crop(election_results) %>%
+  terra::mask(terra::vect(election_results))
+
+
+inhabitants_cologne <-
+  z11::z11_get_100m_attribute(Einwohner) %>%
+  terra::crop(election_results) %>%
+  terra::mask(terra::vect(election_results))
+
+immigrant_share_cologne <-
+  (immigrants_cologne / inhabitants_cologne) * 100
+```
+
+---
+
+## It's raster data
+
+.pull-left[
+```{r raster-data, eval = F}
+tm_shape(immigrant_share_cologne) +
+  tm_raster(palette = "-viridis")
+```
+]
+
+.pull-right[
+.center[
+```{r raster-data-show, echo = F}
+tm_shape(immigrant_share_cologne) +
+  tm_raster(palette = "-viridis")
+```
+]
+]
+
+---
+
+## Linking: Let's get geographical
+
+As the voting (vector) data is different to the Census raster data we cannot use simple ID matching like before
+- we have to rely on spatial linking techniques
+- we could use `terra::extract()`
+  - but as a default it only captures raster cells as a whole and not their spatial fraction
+  - which is honestly okay for most applications
+  - but why not try something else?
+
+---
+
+## `exactextractr::exact_extract()`!
+
+```{r exact-extract, message = FALSE}
+election_results <-
+  election_results %>%
+  dplyr::mutate(
+    immigrant_share = 
+      exactextractr::exact_extract(
+        immigrant_share_cologne, ., 'mean', progress = FALSE
+      ),
+    inhabitants = 
+      exactextractr::exact_extract(
+        inhabitants_cologne, ., 'mean', progress = FALSE
+      )
+  )
+
+head(election_results, 2)
+```
+
+---
+
+## Voilà
+
+.pull-left[
+```{r extract-map, eval = F}
+tm_shape(election_results) +
+  tm_polygons(
+    "immigrant_share", 
+    palette = "-viridis"
+  )
+```
+]
+
+.pull-right[
+.center[
+```{r extract-map-show, echo = F}
+tm_shape(election_results) +
+  tm_polygons("immigrant_share", palette = "-viridis")
+```
+]
+]
+
+---
+
+## How to test spatial autocorrelation
+
+.pull-left[
+We now have to ask
+- do the spatial units relate to each other?
+- if yes, in which way?
+  - only if they are bordering each other? (i.e., Queens or Rooks)
+  - or also if they are in proximity but not necessarily contiguous?
+]
+
+.pull-right[
+.center[
+```{r show-borders, echo = F}
+tm_shape(election_results) +
+  tm_borders()
+```
+]
+]
+
+---
+
+## Let's try Queens neighborhoods
+
+```{r queens}
+queens_neighborhoods <-
+  spdep::poly2nb(
+    election_results,
+    queen = TRUE
+  )
+
+summary(queens_neighborhoods)
+```
+
+---
+
+## Connected regions
+
+.pull-left[
+```{r connected-regions, eval = F}
+queens_neighborhoods %>%
+  spdep::nb2lines(
+    coords = sf::st_as_sfc(election_results), 
+    as_sf = TRUE
+  ) %>%
+  tm_shape() +
+  tm_dots() +
+  tm_lines()
+```
+]
+
+.pull-right[
+.center[
+```{r connected-regions-show, echo = F}
+queens_neighborhoods %>%
+  spdep::nb2lines(
+    coords = sf::st_as_sfc(election_results), 
+    as_sf = TRUE
+  ) %>%
+  tm_shape() +
+  tm_dots() +
+  tm_lines()
+```
+]
+]
+
+---
+
+## Can we now start?
+
+Unfortunately, we are yet done with creating the links between neighborhoods. What we receive is, in principle, a huge matrix with connected observations.
+
+```{r a-matrix, echo = FALSE}
+spdep::nb2mat(queens_neighborhoods, style = "B")[1:10, 1:10]
+```
+
+That's nothing we could plug into a statistical model, such as a regression or the like (see next session).
+
+---
+
+## Normalization
+
+Normalization is the process of creating actual spatial weights. There is a huge dispute on how to do it (Neumayer & Plümper, 2016). But nobody questions whether it should be done in the first place since, among others, it restricts the parameter space of the weights.
+
+.pull-left[
+non-normalized
+```{r non-normalized, echo = FALSE}
+spdep::nb2mat(queens_neighborhoods, style = "B")[1:5, 1:5]
+
+rowSums(spdep::nb2mat(queens_neighborhoods, style = "B")[1:5, 1:5]) %>% as.vector()
+```
+]
+
+.pull-right[
+normalized
+```{r normalized, echo = FALSE}
+spdep::nb2mat(queens_neighborhoods, style = "W")[1:5, 1:5]
+
+rowSums(spdep::nb2mat(queens_neighborhoods, style = "W")[1:5, 1:5]) %>% as.vector()
+```
+]
+
+<br>
+<br>
+.footnote[
+Neumayer, E., & Plümper, T. (2016). W. Political Science Research and Methods, 4(01), 175–193. https://doi.org/10.1017/psrm.2014.40
+
+]
+
+---
+
+## Row-normalization
+
+One of the disputed but at the same time standard procedures is row-normalization. It divides all individual weights (=connections between spatial units) $w_{ij}$ by the row-wise sum of of all other weights:
+
+$$W = \sum_j\frac{w_{ij}}{\sum_jw_{ij}}$$
+
+An alternative would be minmax-normalization:
+
+$$W = \sum_j\frac{w_{ij} - min(w_{ij})}{max(w_{ij})-min(w_{ij})}$$
+
+---
+
+## Apply row-normalization
+
+```{r normalize-weight}
+queens_W <- spdep::nb2listw(queens_neighborhoods, style = "W")
+
+summary(queens_W)
+```
+
+---
+
+## Test of spatial autocorrelation: Moran's I
+
+$$I=\frac{N}{\sum_{i=1}^N\sum_{j=1}^Nw_{ij}}\frac{\sum_{i=1}^{N}\sum_{j=1}^Nw_{ij}(x_i-\bar{x})(x_j-\bar{x})}{\sum_{i=1}^N(x_i-\bar{x})^2}$$
+
+Most and foremost, Moran's I makes use of the previously created weights between all  spatial units pairs $w_{ij}$. It weights deviations from an overall mean value of connected pairs according to the strength of the modeled spatial relations. Moran's I can be interpreted as some sort of a correlation coefficient (-1 = perfect negative spatial autocorrelation; +1 = perfect positive spatial autocorrelation).
+
+---
+
+## Moran's I in `spdep`
+
+```{r moran}
+spdep::moran.test(
+  election_results$immigrant_share, 
+  listw = queens_W
+)
+```
+
+---
+
+## Test of spatial autocorrelation: Geary's C
+
+Moran's I is a global statistic for spatial autocorrelation. It can produce issues when there are only local clusters of spatial interdependence in the data. An alternative is the use of `Geary's C`:
+
+$$C=\frac{(N-1)\sum_i\sum_jw_{ij}(x_i-x_j)^2}{2\sum_{i=1}^N\sum_{j=1}^Nw_{ij}\sum_i(x_i-\bar{x})^2}$$
+
+As you can see, in the numerator, the average value $\bar{x}$ is not as prominent as in Moran's I. Geary's C only produces values between 0 and 2 (value near 0 = positive spatial autocorrelation; 1 = no spatial autocorelation; values near 2 = negative spatial autocorrelation)
+
+---
+
+## Geary's C in `spdep`
+
+```{r geary}
+spdep::geary.test(
+  election_results$immigrant_share, 
+  listw = queens_W
+)
+```
+
+---
+
+## Modern inferface to neighbors: `sfdep` package
+
+The [`sfdep`](https://cran.r-project.org/web/packages/sfdep/index.html) package provides a more `tidyverse`-compliant syntax to spatial weights. See:
+
+```{r sfdep-example}
+election_results <-
+  election_results %>% 
+  dplyr::mutate(
+    neighbors = sfdep::st_contiguity(.), # queen neighborhoods by default
+    weights = sfdep::st_weights(neighbors)
+  )
+
+head(election_results, 2)
+```
+
+---
+
+## Calculating once again Moran's I
+
+```{r moran-again}
+library(magrittr)
+
+election_results %$% 
+  sfdep::global_moran_test(immigrant_share, neighbors, weights)
+```
+
+---
+
+## Calculating once again Geary's C
+
+```{r geary-again}
+election_results %$% 
+  sfdep::global_c_test(immigrant_share, neighbors, weights)
+```
+
+---
+
+class: middle 
+## Exercise 2_3_1: Neighborhood Matrices
+
+[Exercise](https://stefanjuenger.github.io/gis_socsci_konstanz/exercises/2_3_1_Neighborhood_Matrices.html)
+
+[Solution](https://stefanjuenger.github.io/gis_socsci_konstanz/solutions/2_3_1_Neighborhood_Matrices.html)
+
+---
+
+## Measures of local spatial autocorrelation: LISA clusters
+
+The reason why I show you the `sfdep` package is that it provides nice functions to calculate *local* measures of spatial autocorrelation. One popular choice are the estimation of Local Indicators of Spatial Autocorrelation (i.e., LISA clusters). In the most straightforward way they can be interpreted as case-specific indicators of spatial autocorrelation:
+
+$$I_i=\frac{x_i-\bar{x}}{\frac{\sum_{i-1}^N(x_i-\bar{x})^2}{N}}\sum_{j=1}^Nw_{ij}(x_j-\bar{x})$$
+
+---
+
+## LISA clusters in `sfdep`
+
+```{r lisa}
+lisa <- 
+  election_results %>% 
+  dplyr::mutate(
+    lisa = sfdep::local_moran(afd_share, neighbors, weights)
+  ) %>% 
+  tidyr::unnest()
+
+head(lisa, 2)
+```
+
+---
+
+## They are also nice for mapping
+
+.pull-left[
+```{r plain-map}
+tm_shape(lisa) +
+  tm_fill("afd_share", midpoint = NA, palette = "viridis")
+```
+]
+
+.pull-right[
+```{r lisa-map-2}
+tm_shape(lisa) +
+  tm_fill("ii", midpoint = NA, palette = "viridis")
+```
+]
+
+---
+
+## One last bit: bivariate LISAs
+
+.pull-left[
+```{r lisa-map-bi, eval = F}
+lisa_bivariate <- 
+  election_results %>% 
+  dplyr::mutate(
+    lisa = sfdep::local_moran_bv(
+      afd_share, 
+      immigrant_share, 
+      neighbors, 
+      weights
+      )
+  ) %>% 
+  tidyr::unnest()
+
+tm_shape(lisa_bivariate) +
+  tm_fill(
+    "Ib", 
+    midpoint = NA, 
+    palette = "viridis"
+  )
+```
+]
+
+.pull-right[
+.center[
+```{r lisa-map-bi-2, echo = F}
+lisa_bivariate <- 
+  election_results %>% 
+  dplyr::mutate(
+    lisa = sfdep::local_moran_bv(
+      afd_share, 
+      immigrant_share, 
+      neighbors, 
+      weights
+      )
+  ) %>% 
+  tidyr::unnest()
+
+tm_shape(lisa_bivariate) +
+  tm_fill(
+    "Ib", 
+    midpoint = NA, 
+    palette = "viridis"
+  )
+```
+]
+]
+
+---
+
+## Wrap up
+
+You now know how to
+- model connectiveness of spatial units
+- investigate spatial autocorrelation
+  - globally
+  - locally
+- map it
+  
+There's way more, particularly, when it comes to
+- spatial weights (see exercise)
+- clustering techniques (e.g., Hot Spot Analysis)
+- autocorrelation with more than one or two variables
+
+**Now we know our data are spatially autocorrelated. Let's try to find our why this is the case via some spatial econometrics**
+
+---
+
+```{r child = "./content/config/sessions_end.Rmd"}
+```

@@ -1,0 +1,10 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+content/exercises/demo_exercise.Rmd
+content/*/*list.csv
+content/img/*.pptx
+content/sessions/tmp.R
+participant_materials/districts*
+*.Rproj

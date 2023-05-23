@@ -1,0 +1,102 @@
+---
+title: 'Exercise 1_2_2: Manipulate Vector Data'
+author: 'Stefan Jünger & Anne-Kathrin Stroppe'
+date: 'Introduction to Geospatial Techniques for Social Scientists in R'
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r knitr_init, echo=FALSE, cache=FALSE, include=FALSE}
+# custom boxes
+knitr::opts_template$set(
+  clues = list(box.title = "Clues",
+               box.body = list(fill = "#fff9dc", colour = "black"),
+               box.header = list(fill = "#ffec8b", colour = "black"),
+               box.icon = "fa-search",
+               box.collapse = TRUE)
+)
+```
+
+```{r klippy, echo=FALSE, include=TRUE}
+klippy::klippy()
+```
+
+```{block, box.title = "1", box.body = list(fill = "white"), box.icon = "fa-star"}
+Import the ESRI shapefile of German districts and the district attribute table.
+Join the two data frames, transform the CRS to `EPSG:3035` and check your changes. 
+```
+
+```{block, opts.label = "clues"}
+You need to rename one of the id variables or adjust your join accordingly (`AGS = district_id`).
+```
+
+
+```{r first-exercise, solution = TRUE}
+# load libraries
+library(sf)
+library(dplyr)
+
+# Import data
+german_districts <- 
+  sf::read_sf("./data/VG250_KRS.shp") %>% 
+  dplyr::rename(district_id = AGS)
+
+attributes_districts <- readr::read_csv("./data/attributes_districts.csv") 
+
+# Join data and transform
+german_districts_enhanced <- 
+  german_districts %>% 
+  dplyr::left_join(attributes_districts, by = "district_id") %>% 
+  sf::st_transform(3035)
+
+# Check
+sf::st_crs(german_districts_enhanced)
+
+head(german_districts_enhanced, 2)
+```
+
+```{block, box.title = "2", box.body = list(fill = "white"), box.icon = "fa-star"}
+We want a first descriptive visual of the distribution of Covid-19 deaths in Konstanz and the surrounding districts. 
+Calculate the number of Covid-19 deaths (`death_rate`) by population (`population`) and multiply with 100,000. 
+
+Filter Konstanz (`district_id == "08335"`), find the surrounding districts, and plot Konstanz and its surrounding districts.
+```
+
+```{block, opts.label = "clues"}
+You can use the dplyr function `sf::bind_rows()` to combine the two spatial objects, "Konstanz" and "Konstanz Surroundings".
+```
+
+```{r second-exercise, solution = TRUE}
+# calculate Covid-19 rate
+german_districts_enhanced <-
+  german_districts_enhanced %>% 
+  dplyr::mutate(covid_deaths_pop = (death_rate / population) * 100000)
+
+# filter Cologne
+konstanz <-
+  german_districts_enhanced %>% 
+  dplyr::filter(district_id == "08335")
+
+# filter surrounding districts, append with Cologne data and select the Covid column
+konstanz_sur <-
+  german_districts_enhanced %>%
+  dplyr::filter(lengths(sf::st_touches(., konstanz)) > 0) %>% 
+  dplyr::bind_rows(konstanz) %>%   
+  dplyr::select(covid_deaths_pop)
+
+# plot  
+plot(konstanz_sur)
+```
+
+```{block, box.title = "3", box.body = list(fill = "white"), box.icon = "fa-star"}
+Save your data set of Konstanz and its surrounding districts as an ESRI Shapefile. 
+```
+
+```{r third-exercise, solution = TRUE, eval = FALSE}
+# Export as shapefile
+sf::st_write(
+  cologne_sur, 
+  dsn = "./data/participant_material/cologne_covid19_epsg3035.shp", 
+  delete_layer = TRUE
+)
+```

@@ -1,0 +1,260 @@
+---
+title: 'Exercise 2_3_1: Neighborhood Matrices'
+author: 'Stefan Jünger & Anne-Kathrin Stroppe'
+date: 'Introduction to Geospatial Techniques for Social Scientists in R'
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r knitr_init, echo=FALSE, cache=FALSE, include=FALSE}
+# custom boxes
+knitr::opts_template$set(
+  clues = list(box.title = "Clues",
+               box.body = list(fill = "#fff9dc", colour = "black"),
+               box.header = list(fill = "#ffec8b", colour = "black"),
+               box.icon = "fa-search",
+               box.collapse = TRUE)
+)
+```
+
+```{r klippy, echo=FALSE, include=TRUE}
+klippy::klippy()
+```
+
+Alright, thus far, we have only used Queen neighborhood matrices with our data. Let's use this exercise to try out different variations. First of all, run the code below in order to compile the data that were also used in the lecture.
+
+```{r compile-data, echo = FALSE}
+voting_districts <-
+  glue::glue(
+    "https://geoportal.stadt-koeln.de/arcgis/rest/services/Basiskarten/kgg/\\
+    MapServer/20/query?where=objectid+is+not+null&text=&objectIds=&time=&\\
+    geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=\\
+    esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&\\
+    outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=\\
+    &geometryPrecision=&outSR=4326&havingClause=&returnIdsOnly=false&return\\
+    CountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=\\
+    &returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinct\\
+    Values=false&resultOffset=&resultRecordCount=&returnExtentOnly=false&datum\\
+    Transformation=&parameterValues=&rangeValues=&quantizationParameters=&\\
+    featureEncoding=esriDefault&f=geojson"
+  ) %>% 
+  sf::st_read(as_tibble = TRUE) %>%
+  sf::st_transform(3035) %>% 
+  dplyr::transmute(Stimmbezirk = as.numeric(nummer))
+
+afd_votes <-
+  glue::glue(
+    "https://www.stadt-koeln.de/wahlen/bundestagswahl/09-2021/praesentation/\\
+    Open-Data-Bundestagswahl476.csv"
+  ) %>% 
+  readr::read_csv2() %>%
+  dplyr::transmute(Stimmbezirk = `gebiet-nr`, afd_share = (F1 / F) * 100)
+
+election_results <-
+  dplyr::left_join(
+    voting_districts,
+    afd_votes,
+    by = "Stimmbezirk"
+  )
+
+immigrants_cologne <-
+  z11::z11_get_100m_attribute(STAATSANGE_KURZ_2) %>%
+  terra::crop(election_results) %>%
+  terra::mask(terra::vect(election_results))
+
+
+inhabitants_cologne <-
+  z11::z11_get_100m_attribute(Einwohner) %>%
+  terra::crop(election_results) %>%
+  terra::mask(terra::vect(election_results))
+
+immigrant_share_cologne <-
+  (immigrants_cologne / inhabitants_cologne) * 100
+
+election_results <-
+  election_results %>%
+  dplyr::mutate(
+    immigrant_share = 
+      exactextractr::exact_extract(immigrant_share_cologne, ., 'mean', progress = FALSE),
+    inhabitants = 
+      exactextractr::exact_extract(inhabitants_cologne, ., 'mean', progress = FALSE)
+  )
+```
+
+```{r compile-data-show, eval = FALSE}
+voting_districts <-
+  glue::glue(
+    "https://geoportal.stadt-koeln.de/arcgis/rest/services/Basiskarten/kgg/\\
+    MapServer/20/query?where=objectid+is+not+null&text=&objectIds=&time=&\\
+    geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=\\
+    esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&\\
+    outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=\\
+    &geometryPrecision=&outSR=4326&havingClause=&returnIdsOnly=false&return\\
+    CountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=\\
+    &returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinct\\
+    Values=false&resultOffset=&resultRecordCount=&returnExtentOnly=false&datum\\
+    Transformation=&parameterValues=&rangeValues=&quantizationParameters=&\\
+    featureEncoding=esriDefault&f=geojson"
+  ) %>% 
+  sf::st_read(as_tibble = TRUE) %>%
+  sf::st_transform(3035) %>% 
+  dplyr::transmute(Stimmbezirk = as.numeric(nummer))
+
+afd_votes <-
+  glue::glue(
+    "https://www.stadt-koeln.de/wahlen/bundestagswahl/09-2021/praesentation/\\
+    Open-Data-Bundestagswahl476.csv"
+  ) %>% 
+  readr::read_csv2() %>%
+  dplyr::transmute(Stimmbezirk = `gebiet-nr`, afd_share = (F1 / F) * 100)
+
+election_results <-
+  dplyr::left_join(
+    voting_districts,
+    afd_votes,
+    by = "Stimmbezirk"
+  )
+
+immigrants_cologne <-
+  z11::z11_get_100m_attribute(STAATSANGE_KURZ_2) %>%
+  terra::crop(election_results) %>%
+  terra::mask(terra::vect(election_results))
+
+
+inhabitants_cologne <-
+  z11::z11_get_100m_attribute(Einwohner) %>%
+  terra::crop(election_results) %>%
+  terra::mask(terra::vect(election_results))
+
+immigrant_share_cologne <-
+  (immigrants_cologne / inhabitants_cologne) * 100
+
+election_results <-
+  election_results %>%
+  dplyr::mutate(
+    immigrant_share = 
+      exactextractr::exact_extract(immigrant_share_cologne, ., 'mean', progress = FALSE),
+    inhabitants = 
+      exactextractr::exact_extract(inhabitants_cologne, ., 'mean', progress = FALSE)
+  )
+```
+
+```{block, box.title = "1", box.body = list(fill = "white"), box.icon = "fa-star"}
+As in the lecture, create a neighborhood (weight) matrix, but this time do it for Queen and Rook neighborhoods. Also, apply a row-normalization.
+```
+
+```{block, opts.label = "clues"}
+You could either use the `sdep` package with its function `spdep::poly2nb()` or the more modern approach of the `sfdep` package using the function `sfdep::st_contiguity()`. In both cases, for Rook neighborhoods, you have to set the option `queen = FALSE`.
+```
+
+```{r first, solution = TRUE}
+# spdep
+queen_neighborhood <-
+  spdep::poly2nb(
+    election_results,
+    queen = TRUE
+  )
+
+queen_W <- spdep::nb2listw(queen_neighborhood, style = "W")
+
+rook_neighborhood <-
+  spdep::poly2nb(
+    election_results,
+    queen = FALSE
+  )
+
+rook_W <- spdep::nb2listw(rook_neighborhood, style = "W")
+
+# sfdep
+election_results <-
+  election_results %>% 
+  dplyr::mutate(
+    queen_neighborhood = sfdep::st_contiguity(., queen = TRUE),
+    queen_W = sfdep::st_weights(queen_neighborhood),
+    rook_neighborhood = sfdep::st_contiguity(., queen = FALSE),
+    rook_W = sfdep::st_weights(rook_neighborhood)
+  )
+```
+
+```{block, box.title = "2", box.body = list(fill = "white"), box.icon = "fa-star"}
+We have not used them, but you can also create distance-based weight matrices. Use again the package of your choice and create weights for a distance between 0 and 5000 meters. Use again row-normalization.
+
+For the purpose of this exercise, you also have to convert the polygon data to point coordinates. I'd propose to use the centroids for this task:
+
+`election_results_centroids <- sf::st_centroid(election_results)`
+
+Use a map to corroborate this conversion was successful. 
+```
+
+```{block, opts.label = "clues"}
+If you use `spdep` use the function `spdep::dnearneigh()` and if you use `sfdep` use the function `sfdep::st_dist_band()`.
+```
+
+```{r second, solution = TRUE}
+# convert to centroids
+election_results_centroids <- sf::st_centroid(election_results)
+
+tm_shape(election_results_centroids) +
+  tm_dots()
+
+# spdep
+distance_neighborhood_5000 <-
+  spdep::dnearneigh(election_results_centroids, 0, 5000)
+
+distance_neighborhood_5000_W <- 
+  spdep::nb2listw(distance_neighborhood_5000, style = "W")
+
+# sfdep
+election_results_centroids <-
+  election_results_centroids %>% 
+  dplyr::mutate(
+    neighbors_5000 = sfdep::st_dist_band(., 0, 5000),
+    weights_5000 = sfdep::st_weights(neighbors_5000)
+  )
+```
+
+```{block, box.title = "2", box.body = list(fill = "white"), box.icon = "fa-star"}
+Now let's see how all of these different spatial weights perform in an actual analysis. Calculate Moran's I and Geary's C for each one of the weights and report their results for the variable `afd_share`.
+```
+
+```{block, opts.label = "clues"}
+Now it is really important which path you have taken before -- using `spdep` and `sfdep` -- as it determines the way how you solve this exercise.
+```
+
+```{r third, solution = TRUE}
+# spdep
+spdep::moran.test(election_results$immigrant_share, listw = queen_W)
+spdep::moran.test(election_results$immigrant_share, listw = rook_W)
+spdep::moran.test(
+  election_results_centroids$immigrant_share, 
+  listw = distance_neighborhood_5000_W
+)
+
+spdep::geary.test(election_results$immigrant_share, listw = queen_W)
+spdep::geary.test(election_results$immigrant_share, listw = rook_W)
+spdep::geary.test(
+  election_results_centroids$immigrant_share, 
+  listw = distance_neighborhood_5000_W
+)
+
+# sfdep
+library(magrittr)
+
+election_results %$% 
+  sfdep::global_moran_test(immigrant_share, queen_neighborhood, queen_W)
+
+election_results %$% 
+  sfdep::global_moran_test(immigrant_share, rook_neighborhood, rook_W)
+
+election_results_centroids %$% 
+  sfdep::global_moran_test(immigrant_share, neighbors_5000, weights_5000)
+
+election_results %$% 
+  sfdep::global_c_test(immigrant_share, queen_neighborhood, queen_W)
+
+election_results %$% 
+  sfdep::global_c_test(immigrant_share, rook_neighborhood, rook_W)
+
+election_results_centroids %$% 
+  sfdep::global_c_test(immigrant_share, neighbors_5000, weights_5000)
+```

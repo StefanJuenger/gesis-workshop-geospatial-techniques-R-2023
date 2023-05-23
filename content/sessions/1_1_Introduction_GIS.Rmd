@@ -1,0 +1,679 @@
+---
+title: "Introduction to Geospatial Techniques for Social Scientists in R"
+subtitle: "Introduction to GIS"
+author: "Stefan Jünger & Anne-Kathrin Stroppe"
+date: June 06, 2022
+institute: |
+  GESIS Workshop
+presenter: Stefan
+--- 
+layout: true
+
+```{r child = "./content/config/sessions_setup.Rmd"}
+```
+
+---
+
+## About This Course
+
+This course will teach you how to exploit `R` and apply its geospatial techniques in a social science context.
+
+By the end of this course, you should... 
+
+- Be comfortable with using geospatial data in `R`
+  - Including importing, wrangling, and exploring geospatial data
+- Be able to create maps based on your very own processed geospatial data in `R`
+- Feel prepared for (your first steps in) spatial analysis
+ 
+--
+
+**A lot of the materials stem from previous courses but were updated and refined in preperation of this one. I'd like to thank my wonderful colleague Anne-Kathrin Stroppe for her value contribution to this corpus** 
+
+---
+
+## Keep Calm and Carry On Learning/Using `R`
+
+```{r, learn-r-cartoon, out.width = "50%", echo = F}
+woRkshoptools::include_picture("r_first_then.png") 
+```
+<small><small>Illustration by [Allison Horst](https://github.com/allisonhorst/stats-illustrations) </small></small> 
+
+
+---
+
+## I am (Necessarily) Selective
+
+There's a multitude of spatial `R` packages
+- I cannot cover all of them
+  - and we cannot cover all functions
+- You may have used some I am not familiar with
+
+I show the use of packages I exploit in practice
+- There's always another way of doing things in `R`
+- Don't hesitate to bring up your solutions
+
+**You can't learn everything at once, but you also don't have to!**
+
+---
+
+## Prerequisites for This Course
+
+.pull-left[
+- At least basic knowledge of `R`, its syntax, and internal logic
+  - Affinity for using script-based languages
+  - Don't be scared to wrangle data with complex structures
+- Working versions of `R` (and `Rstudio`) on your computer 
+  - Ideally, with the packages installed, I asked you upfront
+]
+
+.pull-right[
+<br>
+<br>
+```{r gates, echo = FALSE, out.width="75%"}
+woRkshoptools::include_picture("i-love-programming.jpg")
+```
+]
+  
+---
+
+## About Me
+
+**Stefan Jünger**
+
+.pull-left[
+```{r me-pic, echo = FALSE, out.width = "50%"}
+woRkshoptools::include_picture("Stefan.png")
+```
+]
+
+.pull-right[
+- Senior Researcher in the team Survey Data Augmentation at the GESIS department Survey Data Curation
+- Ph.D. in social sciences, University of Cologne
+]
+
+- Research interests:
+  - Quantitative methods & Geographic Information Systems (GIS)
+  - Social inequalities & attitudes towards minorities
+  - Data management & data privacy
+  - Reproducible research
+
+.small[
+[stefan.juenger@gesis.org](mailto:stefan.juenger@gesis.org) |
+[@StefanJuenger](https://twitter.com/StefanJuenger) |
+[https://stefanjuenger.github.io](https://stefanjuenger.github.io)
+]
+
+---
+
+## About You
+
+.pull-left[
+- What's your name?  
+- Where do you work/research? What are you working on/researching?
+- What is your experience with `R` or other programming languages?
+- Do you already have experience with geospatial data?
+]
+
+.pull-right[
+<br>
+```{r tell-me, echo = FALSE}
+woRkshoptools::include_picture("so-tell-me-5be02d.jpg")
+```
+.tinyisher[.center[[Source](https://makeameme.org/meme/so-tell-me-5be02d)]]
+]
+- **What do you want to use `R` and geospatial data for?**
+
+---
+
+## Preliminaries
+
+- The workshop consists of a combination of lectures and hands-on exercises
+- Feel free to ask questions at any time
+- Slides and other materials are available at
+
+.center[`https://github.com/StefanJuenger/gis_socsci_konstanz`]
+
+---
+
+## Course Schedule
+
+```{r course-content, echo = FALSE}
+course_content
+```
+
+---
+
+## Now
+
+```{r course-content-now, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(1, background = "yellow")
+```
+
+---
+
+## Geographic Information in Social Science Research
+
+.pull-left[
+Exploiting geographic information is not new.
+
+For example, Siegfried (1913) has used soil composition information to explain election results in France.
+]
+
+.pull-right[
+```{r siegfried-pic, echo = FALSE, out.width = "75%"}
+woRkshoptools::include_picture("siegfried.png")
+```
+.center[.tinyisher[https://images.fr.shopping.rakuten.com/photo/874882994.jpg]]
+]
+
+---
+
+## Integration in Theory
+
+.pull-left[
+```{r allport-pic, echo = FALSE, out.width = "65%"} 
+woRkshoptools::include_picture("nature_prejudice.png")
+```
+.center[.tinyisher[https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1387595670l/7034925.jpg]]
+]
+
+.pull-right[
+A lot of classic theories have space embedded
+
+For example, in Allport's (1954) contact theory, he at least implicitly assumes that people meet in a set space
+]
+
+---
+
+## Today’s Research Is Not Necessarily New
+
+.pull-left[
+```{r park-etal-pic, echo = FALSE}
+woRkshoptools::include_picture("park_etal.png")
+```
+.tinyisher[Park et al. 1925]
+]
+
+--
+
+.pull-right[
+```{r our-stuff-pic, echo = FALSE}
+woRkshoptools::include_picture("fig_halo_example.png")
+```
+.tinyisher[Jünger 2019]
+]
+
+---
+
+## Data Landscape
+
+.pull-left[
+Increased amount of available data
+- Quantitative and on a small spatial scale
+
+</br>
+
+```{r pic-tools, echo = FALSE, out.width = "60%"}
+woRkshoptools::include_picture("/tools_today.png")
+```
+]
+
+.pull-right[
+```{r pic-geo, echo = FALSE}
+woRkshoptools::include_picture("geo_today.png")
+```
+
+Better tools
+- Personal computer with enough horsepower
+- Standard software, such as `R`, can be used as Geographic Information System (GIS)
+]
+
+---
+
+## What Are Geospatial Data?
+
+.pull-left[
+</br>
+Data with a direct spatial reference $\rightarrow$ **geo-coordinates**
+- Information about geometries
+- Optional: Content in relation to the geometries
+]
+
+.pull-right[
+```{r pic-geometries-1, echo = FALSE, out.width = "85%"}
+woRkshoptools::include_picture("fig_geometries.png")
+```
+
+.tinyisher[Sources: OpenStreetMap / GEOFABRIK (2018), City of Cologne (2014), and the Statistical Offices of the Federation and the Länder (2016) / Jünger, 2019]
+]
+
+---
+
+## Geospatial Data in This Course I
+
+In the folder called `./data` in the same folder as the other materials for this workshop, you can find the data files prepped for all the exercises and slides. The following data are included:
+
+- Administrative borders of Germany (Prefix *VG250_*) are provided by the German [Federal Agency for Cartography and Geodesy](http://www.bkg.bund.de)(2018). Check out their [Open Data Portal](https://gdz.bkg.bund.de/index.php/default/open-data.html).
+
+- The hospital locations are based on the register of hospitals and preventive care/rehabilitation facilities 2017 published by the [Federal Statistical Office Germany](https://www-genesis.destatis.de/genesis/online). Addresses were geocoded and -referenced by Anne-Kathrin Stroppe. 
+
+- Data on Covid-19 deaths as of July 6th, 2022 were prepared by the Robert-Koch-Institut and downloaded from the [NPGEO data hub](https://npgeo-corona-npgeo-de.hub.arcgis.com/datasets/917fc37a709542548cc3be077a786c17_0).
+
+---
+
+## Geospatial Data in This Course II
+
+-  Election Results for the German Right-Wing Populist Party *AfD* in the 2021 German federal election ([Der Bundeswahlleiter, Wiesbaden 2018](https://www.bundeswahlleiter.de/bundestagswahlen/2017/ergebnisse/weitere-ergebnisse.html)).
+
+- German Census 2011 data are provided by the [Federal Statistical Office Germany, Wiesbaden 2020](https://www.zensus2011.de/EN/Home/home_node.html)
+
+- Shapefiles, voting data, and Covid cases for Cologne are gathered from the [Open Data Portal Cologne](https://www.offenedaten-koeln.de/)
+
+- Raster data on land use are provided by the Leibniz [Institute of Ecological Urban and Regional Development](https://www.ioer.de/1/home/) through the [Monitor of Settlement and Open Space Development (IOER Monitor)](https://www.ioer-monitor.de/en/)
+
+**Please make sure that if you reuse any of the provided data to cite the original data sources.**
+
+---
+
+## What Is GIS?
+
+Most common understanding: Geographic Information Systems (GIS) as specific software to process geospatial data for 
+- Visualization
+- Analysis
+
+```{r pic-gis, echo = FALSE, out.width = "70%", fig.align = "center"}
+woRkshoptools::include_picture("gis.png")
+```
+
+.center[.tinyisher[Screenshot of the Open Source GIS [`QGIS`](https://qgis.org)]]
+
+---
+
+## Data Specifics
+
+.pull-left[
+</br>
+</br>
+```{r pic-geometries-2, echo = FALSE}
+woRkshoptools::include_picture("fig_3d_simple.png")
+```
+
+.tinyisher[Sources: OpenStreetMap / GEOFABRIK (2018) and City of Cologne (2014)]
+]
+
+.pull-right[
+Formats
+- Vector data (points, lines, polygons)
+- Raster data (grids)
+
+Coordinate reference systems
+- Allow the projection on earth's surface
+- Differ in precision for specific purposes
+]
+
+---
+
+## Layers Must Match!
+
+.pull-left[
+.center[
+**Projected CRS**
+(EPSG:3857)
+]
+]
+
+.pull-right[
+.center[
+**Geographic CRS**
+(EPSG:3035)
+]
+]
+
+```{r pic-crs, echo = FALSE}
+woRkshoptools::include_picture("fig_projections.png")
+```
+
+.tinyisher[Source: Statistical Office of the European Union Eurostat (2018) / Jünger, 2019]
+
+
+---
+
+## Types of CRS
+
+**Geographic CRS**
+- description of specific points
+- perfect for navigation as it creates straight lines between points
+
+**Projected CRS**
+- projection of geometries on a (flat) surface
+- straight lines become bent lines
+
+
+(There are also geocentric CRS requiring also a z-coordinate...)
+
+*In practice, you shouldn't worry too much about CRS. Again, what matters is that they match.*
+
+---
+
+class: middle
+
+<br>
+
+```{r layers-meme, echo = FALSE, out.width="70%"}
+woRkshoptools::include_picture("layers_meme.jpg")
+```
+
+---
+
+## Old Standard: `PROJ.4` Strings
+
+This is how your information about the CRS are defined in a classic standard:
+
+
+```
++proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs 
+```
+
+.tinyisher[Source: https://epsg.io/3035]
+
+(It's nothing you would type by hand)
+
+---
+
+## New Kid in Town: `WKT` (“Well Known Text”)
+
+```
+PROJCS["ETRS89 / LAEA Europe",
+    GEOGCS["ETRS89",
+        DATUM["European_Terrestrial_Reference_System_1989",
+            SPHEROID["GRS 1980",6378137,298.257222101,
+                AUTHORITY["EPSG","7019"]],
+            TOWGS84[0,0,0,0,0,0,0],
+            AUTHORITY["EPSG","6258"]],
+        PRIMEM["Greenwich",0,
+            AUTHORITY["EPSG","8901"]],
+        UNIT["degree",0.0174532925199433,
+            AUTHORITY["EPSG","9122"]],
+        AUTHORITY["EPSG","4258"]],
+    PROJECTION["Lambert_Azimuthal_Equal_Area"],
+    PARAMETER["latitude_of_center",52],
+    PARAMETER["longitude_of_center",10],
+    PARAMETER["false_easting",4321000],
+    PARAMETER["false_northing",3210000],
+    UNIT["metre",1,
+        AUTHORITY["EPSG","9001"]],
+    AUTHORITY["EPSG","3035"]]
+```
+
+.tinyisher[Source: https://epsg.io/3035]
+
+---
+
+## Current Transition From `PROJ.4` to `WKT` in `R`
+
+Currently, there's a transition from the bit old standard of `PROJ.4` to `WKT` in many `R` packages.
+- sometimes, you'll get warnings (see next slide)
+- you should check what's causing the warning
+- in the best case, they will disappear in the future
+
+However, for the operations we are going to show...
+
+
+---
+
+## ...Just Ignore the Warnings
+
+You may particularly face some warnings when using the `raster` package. Again, as always in `R`, that's just a warning. [You can ignore it](https://gis.stackexchange.com/questions/365296/setting-crs-of-raster-to-epsg-3035-using-r) since it's a result of the current transition of CRS definitions in individual packages.
+
+```
+Warning message:
+In showSRID(uprojargs, format = "PROJ", multiline = "NO") :
+  Discarded datum European_Terrestrial_Reference_System_1989 in CRS definition
+```
+
+I have turned these warnings off for legibility reasons in my slides.
+
+---
+
+## EPSG Codes
+
+.pull-left[
+Eventually, it's not as challenging to work with CRS in `R` as it may seem
+- we don't have to use PROJ.4 or WKT strings directly.
+
+Most of the times it's enough to use so-called EPSG Codes ("European Petroleum Survey Group Geodesy")
+- Small digit sequence
+]
+
+.pull-right[
+<br>
+```{r epsg-icon, echo = FALSE}
+woRkshoptools::include_picture("ImageEPSGlogo.gif")
+```
+.tinyisher[.center[[Source](http://geotiff.maptools.org/proj_list/guid7.html)]]
+]
+
+---
+
+## More Details on Geospatial Data
+
+Let's learn about geospatial data as we learn about specific formats:
+- vector data 
+- raster data
+
+.pull-left[
+```{r geo-real-worls, echo = FALSE, out.width="75%"}
+woRkshoptools::include_picture("Raster-and-Vector-data-types-as-representative-of-real-world-geographic-space_W640.jpg")
+```
+
+.tinyisher[.center[[Source](https://dx.doi.org/10.13140/2.1.3030.1767)]]
+]
+
+.pull-right[
+Be assured: `R` can serve as a full-blown Geographic Information System (GIS) for all these different data types.
+]
+
+---
+
+## `R` Packages for Geospatial Data
+
+There have been packages for geospatial data in `R` already for a long time.
+- [`sp`](https://cran.r-project.org/web/packages/sp/index.html) for vector data
+- [`raster`](https://cran.r-project.org/web/packages/raster/index.html) for raster data
+
+.pull-left[
+Cutting-edge for vector data
+- [`sf`](https://cran.r-project.org/web/packages/sf/index.html), which implements the [ISO 19125](https://www.iso.org/standard/40114.html) standard for geospatial data, called "simple features".
+]
+
+.pull-right[
+```{r pic-sf, echo = FALSE, out.width = "75%"}
+woRkshoptools::include_picture("sf.jpg")
+```
+
+.tinyisher[Illustration by [Allison Horst](https://github.com/allisonhorst/stats-illustrations)]
+]
+
+---
+
+## Packages in This Course
+
+We will use plenty of different packages during the course, but only a few are our main drivers (e.g., the `sf` package). Here's the list of packages
+
+.pull-left[
+- [`dplyr`](https://cran.r-project.org/web/packages/dplyr/index.html)
+- [`ggplot2`](https://cran.r-project.org/web/packages/ggplot2/index.html)
+- [`haven`](https://cran.r-project.org/web/packages/haven/index.html)
+- [`osmdata`](https://cran.r-project.org/web/packages/osmdata/index.html)
+- [`OpenStreetMap`](https://cran.r-project.org/web/packages/OpenStreetMap/index.html)
+- [`reticulate`](https://cran.r-project.org/web/packages/reticulate/index.html) (optional)
+- [`sf`](https://cran.r-project.org/web/packages/sf/index.html)
+- [`spatialreg`](https://cran.r-project.org/web/packages/spatialreg/index.html)
+]
+
+.pull-right[
+- [`spatstat`](https://cran.r-project.org/web/packages/spatstat/index.html)
+- [`sfdep`](https://cran.r-project.org/web/packages/sfdep/index.html)
+- [`spdep`](https://cran.r-project.org/web/packages/spdep/index.html)
+- [`stars`](https://cran.r-project.org/web/packages/stars/index.html)
+- [`terra`](https://cran.r-project.org/web/packages/terra/index.html)
+- [`tmap`](https://cran.r-project.org/web/packages/tmap/index.html)
+- [`tmaptools`](https://cran.r-project.org/web/packages/tmaptools/index.html)
+- [`raster`](https://cran.r-project.org/web/packages/raster/index.html)
+- [`z11`](https://github.com/StefanJuenger/z11)
+]
+
+*Note*: Some additional packages will be installed as dependencies.
+
+---
+
+class: middle
+## Exercise 1_1_1: Package Installation
+
+[Exercise](https://stefanjuenger.github.io/gis_socsci_konstanz/exercises/1_1_1_Package_Installation.html)
+
+[Solution](https://stefanjuenger.github.io/gis_socsci_konstanz/solutions/1_1_1_Package_Installation.html)
+
+---
+
+class: middle
+## Some Last Notes on Using `R`
+
+---
+
+## What Is `R`?
+
+>R is a free software environment for statistical computing and graphics. It compiles and runs on a wide variety of UNIX platforms, Windows and MacOS ([`R` Project website](https://www.r-project.org/)).
+
+`R` is [free and open-source software (FOSS)](https://en.wikipedia.org/wiki/Free_and_open-source_software) and also a programming language. More specifically, it is a free, non-commercial implementation of the [`S` programming language](https://en.wikipedia.org/wiki/S_(programming_language) (developed by Bell Laboratories).
+
+---
+
+## Base `R` vs. `Tidyverse`
+
+There's only one `R`. However, due to the enormous amount of additional packages, routines for similar purposes can shape up rather differently.
+
+A prime example is the [`Tidyverse`](https://www.tidyverse.org/)
+- collection of packages for data science
+- tools to import, wrangle, and visualize data
+
+`Tidyverse` is sometimes a bit easier for beginners
+- verbs in the `dplyr` package
+- non-standard evaluation (`column_name` vs. `"column_name"`)
+- pipes (in contrast to nested functions)
+
+---
+
+## Piping In `R`
+
+Usually, in `R` we apply functions as follows:
+
+```{r function-r, eval = FALSE}
+f(x)
+```
+
+In the logic of pipes this function is written as:
+
+```{r function-pipe,  eval = FALSE}
+x %>% f(.)
+```
+
+--
+
+We can use pipes on more than one function:
+
+```{r function-pipe-2, eval = FALSE}
+x %>% 
+  f_1() %>% 
+  f_2() %>% 
+  f_3()
+```
+
+More details: https://r4ds.had.co.nz/pipes.html
+
+---
+
+## Some Precocious Notes on Style
+.pull-left[
+In some ways, writing code is similar to writing a novel; it's a craft where you set the tone of how you want to be perceived by your future-you and others.
+  
+What helps to be understood is the styling of your code.
+]
+
+.pull-right[
+```{r out.width = "70%", echo = FALSE}
+woRkshoptools::include_picture("on_writing_king.jpg")
+```
+.tinyisher[https://images-na.ssl-images-amazon.com/images/I/71z4varBITL.jpg]
+]
+
+---
+
+## General Elements of Style
+These are only some of the topics you will face when researching for styling your code.
+- line length (see the ["sacred 80 column rule"]( https://www.emacswiki.org/emacs/EightyColumnRule))
+- indentions
+- variable/object naming
+- comments
+- assignment rules
+
+`R` is pretty flexible in styling, which is why it is necessary to think about these topics
+- compare that to `Python`, which has strict indention rules
+
+---
+
+## Style Guides out There
+It's not uncommon to follow a specific style guide that already exists.
+
+Many institutions define styles for several different programming languages, such as [Google's style guide for `R`](https://google.github.io/styleguide/Rguide.html)
+
+It doesn't matter what style you use as long as you are consistent (at least in one single `R`-file, right?).
+
+---
+
+## Coding in Style `r emo::ji("sunglasses")`
+
+[The `tidyverse` style guide](https://style.tidyverse.org/) by Hadley Wickham  
+  
+[`styler`](http://styler.r-lib.org/) package (incl. RStudio add-in)
+
+```{r install & load styler, eval = F, echo = T}
+install.packages("styler")
+library(styler)
+```
+
+From the package documentation:
+- `style_file()` styles .R and/or .Rmd files.
+- `style_dir()` styles all .R and/or .Rmd files in a directory.
+
+```{r, out.width = "50%", echo = FALSE}
+woRkshoptools::include_picture("styler_addin.png")
+```
+
+---
+
+## Namespaces `::`
+
+I heavily use namespace declarations in code: `::`. It's a way to safely call a function if there are the same function names in other packages loaded. Usually, you don't need that, but it's a transparent way to show from which package you call which function. 
+
+No namespaces:
+
+```{r without-namespaces, eval = FALSE}
+library(sf)
+
+st_buffer(fancy_data, 500) 
+```
+
+With namespaces:
+
+```{r namespaces, eval = FALSE}
+sf::st_buffer(fancy_data, 500)
+```
+
+<!-- STOP WITH SLIDES HERE -->
+
+---
+
+```{r child = "./content/config/sessions_end.Rmd"}
+```

@@ -1,0 +1,795 @@
+---
+title: "Introduction to Geospatial Techniques for Social Scientists in R"
+subtitle: "Spatial Econometrics & Outlook"
+author: "Stefan Jünger & Anne-Kathrin Stroppe"
+date: June 07, 2022
+institute: |
+  GESIS Workshop
+presenter: Stefan
+editor_options: 
+  chunk_output_type: console
+---
+layout: true
+
+```{r child = "./content/config/sessions_setup.Rmd"}
+```
+
+---
+
+## Now
+
+```{r course-content-now, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(10, background = "yellow")
+```
+
+---
+
+## What are spatial econometrics?
+
+Econometrics could be reduced to simple statistics... 
+- yet, it has a clearer connection to (economic) theory
+  - this is also why it is interesting for causal inference and thinking
+  
+Therefore, spatial econometrics combine spatial analysis and econometrics
+- study of why spatial relationships (i.e., autocorrelation) exist
+
+**What is the data generation process?**
+
+---
+
+## Spatial diffusion vs. spatial spillover
+
+There are at least two common mechanisms we are interested in spatial econometrics
+
+.pull-left[
+**Diffusion**
+- $y_i$ affects $y_j$ through $w_{ij}$
+- $y_j$ affects $y_i$ through $w_{ji}$
+- that's a feedback effect
+  - endogenous by design!
+]
+
+.pull-right[
+**Spillover**
+- $x_i$ affects $y_j$ through $w_{ij}$
+- $x_j$ affects $y_i$ through $w_{ij}$
+]
+
+---
+
+## Let's have another look at our chessboard
+
+.pull-left[
+We have to think about theory and mechanisms and how they translate into spatial effects and the data generation process.
+
+That said, there are tests to check for the specific data generation process at hand but they are not recommended to be used naively.
+]
+
+.pull-right[
+.center[
+```{r queen, echo = F}
+woRkshoptools::include_picture("queen_interdependent.png")
+```
+]
+]
+
+---
+
+## Is it meaningful or just nuisance?
+
+Space can be important in our analysis in two ways. 
+- it's meaningful in our theory and we thus interpret it accordingly after estimation
+- it can distort our empirical estimates producing bias, inconsistency and inefficiency
+
+**We can address both of these different perspectives in our analysis with spatial econometric methods.**
+
+---
+
+## Formulas... models, models, models
+
+Linear Regression:
+
+$$Y = X\beta + \epsilon$$
+
+--
+
+Spatial Lag Y / Spatial Autoregressive Model:
+
+$$Y = \rho WY + X\beta + \epsilon$$
+
+--
+
+Spatial Lag X Model:
+
+$$Y = X\beta + WX\theta + \epsilon$$
+
+--
+
+Spatial Error Model: 
+
+$$Y = X\beta + u$$
+$$u = \lambda Wu + \epsilon$$
+
+---
+
+## Flavors and extensions
+
+.small[
+Spatial Durbin Model:
+
+$$Y = \rho WY + X\beta + WX\theta + \epsilon $$
+]
+
+--
+
+.small[
+Spatial Durbin Error Model:
+
+$$Y = X\beta + WX\theta + u$$
+$$u = \lambda Wu + \epsilon$$
+]
+
+--
+
+.small[
+Combined Spatial Autocorrelation Model:
+
+$$Y = \rho WY + X\beta + u$$
+$$u = \lambda Wu + \epsilon$$
+]
+
+--
+
+.small[
+Manski Model:
+
+$$Y = \rho WY + WX\theta + X\beta + u$$
+$$u = \lambda Wu + \epsilon$$
+]
+
+---
+
+## Intermediate summary
+
+There are a lot of models you could estimate to *explain* spatial autocorrelation. And there's a vast body of literature on what's the best choice for which application. 
+
+I'd explicitly like to recommend you the work of [Tobias Rüttenauer](https://ruettenauer.github.io/publication/) for us social scientists. [Here](https://ruettenauer.github.io/SICSS-Spatial/index.html) are some really nice workshop materials.
+
+
+**In this session, we will only estimate Spatial Lag Y and X and Spatial Error Models.**
+
+---
+
+## 'Research' question and data
+
+We will use the same example as in the previous session. But this time we will actually test if one of our spatal regression models helps in investigating the data generation process any further. We may ask:
+
+1. Do immigrant shares have an effect on AfD voting shares within voting districts?
+2. Do immigrant shares have an effect on AfD voting shares between neighborhoods? (=spillover)
+3. Do AfD voting shares have an effect on AfD voting shares between neighborhoods? (=diffusion)
+
+It might also be a good idea to control for inhabitant numbers within the voting districts.
+
+```{r compile-data, echo = FALSE}
+voting_districts <-
+  glue::glue(
+    "https://geoportal.stadt-koeln.de/arcgis/rest/services/Basiskarten/kgg/\\
+    MapServer/20/query?where=objectid+is+not+null&text=&objectIds=&time=&\\
+    geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=\\
+    esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&\\
+    outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=\\
+    &geometryPrecision=&outSR=4326&havingClause=&returnIdsOnly=false&return\\
+    CountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=\\
+    &returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinct\\
+    Values=false&resultOffset=&resultRecordCount=&returnExtentOnly=false&datum\\
+    Transformation=&parameterValues=&rangeValues=&quantizationParameters=&\\
+    featureEncoding=esriDefault&f=geojson"
+  ) %>% 
+  sf::st_read(as_tibble = TRUE) %>%
+  sf::st_transform(3035) %>% 
+  dplyr::transmute(Stimmbezirk = as.numeric(nummer))
+
+afd_votes <-
+  glue::glue(
+    "https://www.stadt-koeln.de/wahlen/bundestagswahl/09-2021/praesentation/\\
+    Open-Data-Bundestagswahl476.csv"
+  ) %>% 
+  readr::read_csv2() %>%
+  dplyr::transmute(Stimmbezirk = `gebiet-nr`, afd_share = (F1 / F) * 100)
+
+election_results <-
+  dplyr::left_join(
+    voting_districts,
+    afd_votes,
+    by = "Stimmbezirk"
+  )
+
+immigrants_cologne <-
+  z11::z11_get_100m_attribute(STAATSANGE_KURZ_2) %>%
+  terra::crop(election_results) %>%
+  terra::mask(terra::vect(election_results))
+
+
+inhabitants_cologne <-
+  z11::z11_get_100m_attribute(Einwohner) %>%
+  terra::crop(election_results) %>%
+  terra::mask(terra::vect(election_results))
+
+immigrant_share_cologne <-
+  (immigrants_cologne / inhabitants_cologne) * 100
+
+election_results <-
+  election_results %>%
+  dplyr::mutate(
+    immigrant_share = 
+      exactextractr::exact_extract(immigrant_share_cologne, ., 'mean'),
+    inhabitants = 
+      exactextractr::exact_extract(inhabitants_cologne, ., 'mean')
+  )
+```
+
+---
+
+## Linear regression
+
+```{r ols}
+linear_regression <-
+  lm(afd_share ~ immigrant_share + inhabitants, data = election_results)
+
+summary(linear_regression)
+```
+
+---
+
+## Now we need a spatial weight
+
+To estimate a spatial regression we, once again, have to construct a spatial weight as in the analysis of spatial autocorrelation. In fact, we'll use the same approach as before.
+
+```{r queen-2}
+queen_neighborhoods <- spdep::poly2nb(election_results, queen = TRUE)
+
+queen_W <- spdep::nb2listw(queen_neighborhoods, style = "W")
+```
+
+---
+
+## Spatial Error Model: If we want to control nuisance
+
+.small[
+```{r spatial-error}
+spatial_error_model <-
+  spatialreg::errorsarlm(
+    afd_share ~ immigrant_share + inhabitants,
+    data = election_results,
+    listw = queen_W
+    )
+
+summary(spatial_error_model)
+```
+]
+
+---
+
+## Spatial Lag X Model: estimating spillovers
+
+.small[
+```{r spatial-lag-x}
+spatial_lag_x_model <-
+  spatialreg::lmSLX(
+    afd_share ~ immigrant_share + inhabitants,
+    data = election_results,
+    listw = queen_W
+  )
+
+summary(spatial_lag_x_model)
+```
+]
+
+---
+
+## Spatial Lag Y Model: estimating diffusion
+
+.small[
+```{r spatial-lag-y}
+spatial_lag_y_model <-
+  spatialreg::lagsarlm(
+    afd_share ~ immigrant_share + inhabitants,
+    data = election_results,
+    listw = queen_W)
+
+summary(spatial_lag_y_model)
+```
+]
+
+---
+
+## Comparison: What's 'better'?
+
+.small[
+```{r aic}
+AIC(spatial_error_model, spatial_lag_x_model, spatial_lag_y_model)
+
+spdep::lm.LMtests(linear_regression, queen_W, test = c("LMerr", "LMlag"))
+```
+]
+
+Let's stick to our theory, shall we?
+
+---
+
+## Of higher importance: interpretation
+
+Unfortunately, in case of a Spatial Lag Y Model the spatial parameter $\rho$ only tells us that the effect is (statistically) significant -- or not. 
+- remember: these models are endegenous by design
+  - we have effects of $y_j$ on $y_i$ and vice versa
+  - what a mess
+  
+Luckily, there's a method to decompose the spatial effects into direct, indirect and total effects: **estimating impacts**
+- it's also helpful for Spatial Lag X Models
+
+---
+
+## Impact estimation in `R`
+
+This time, let's start with the Spatial Lag Y Model:
+
+```{r impact-lag-y}
+spatialreg::impacts(spatial_lag_y_model, listw = queen_W)
+```
+
+Compare it to the 'simple' regression output:
+
+```{r lag-y-regression-output}
+coef(spatial_lag_y_model)
+```
+
+---
+
+## Spatial Lag X impacts
+
+```{r impact-lag-x}
+spatialreg::impacts(spatial_lag_x_model, listw = queen_W)
+```
+
+Compare it to the 'simple' regression output:
+
+```{r lag-x-regression-output}
+coef(spatial_lag_x_model)
+```
+
+---
+
+## If you need p-values and stuff
+
+```{r impacts-p-values}
+spatialreg::impacts(spatial_lag_y_model, listw = queen_W, R = 500) %>% 
+  summary(zstats = TRUE, short = TRUE)
+```
+
+---
+
+class: middle
+
+## Exercise 2_3_2: Spatial Regression
+
+[Exercise](https://stefanjuenger.github.io/gis_socsci_konstanz/exercises/2_3_2_Spatial_Regression.html)
+
+[Solution](https://stefanjuenger.github.io/gis_socsci_konstanz/solutions/2_3_2_Spatial_Regression.html)
+
+---
+
+## What if you got missing values?
+
+Missing values in spatial regression models does produce similar problems as in ordinary regression analysis
+- yield biased estimates
+- reduces statistical power
+
+However, the issue gets a bit more severe as the observations interdependent
+- we are missing out more information
+- even randomness of missings might get problematic
+-
+
+**Thus, it might be a good idea to think of methods to navigate this bias.**
+
+---
+
+## Let's produce a dataset with missing data
+
+.pull-left[
+```{r missing-elections, eval = FALSE}
+# ~10% missing values
+missing_index <- 
+  sample(
+    1:nrow(election_results), 
+    round(nrow(election_results) * .1, 0)
+    )
+
+election_results_missing <- 
+  election_results
+
+election_results_missing$afd_share[missing_index] <- 
+  NA
+
+# list-wise deletion
+election_results_missing <- 
+  na.omit(election_results_missing)
+
+tm_shape(election_results_missing) +
+  tm_fill("afd_share", palette = "viridis")
+```
+]
+
+.pull-right[
+.center[
+```{r missing-elections-2, echo = FALSE}
+# ~10% missing values
+missing_index <- 
+  sample(
+    1:nrow(election_results), 
+    round(nrow(election_results) * .1, 0)
+    )
+
+election_results_missing <- 
+  election_results
+
+election_results_missing$afd_share[missing_index] <- NA
+
+# list-wise deletion
+election_results_missing <- 
+  na.omit(election_results_missing)
+
+tm_shape(election_results_missing) +
+  tm_fill("afd_share", palette = "viridis")
+```
+]
+]
+
+---
+
+## How does a Spatial Lag X Model perform?
+
+```{r spatial-lag-y-missing}
+queen_neighborhoods_missing <- 
+  spdep::poly2nb(election_results_missing, queen = TRUE)
+
+queen_W_missing <- 
+  spdep::nb2listw(queen_neighborhoods_missing, style = "W", zero.policy = TRUE)
+
+spatial_lag_y_model_missing <-
+  spatialreg::lagsarlm(
+    afd_share ~ immigrant_share + inhabitants,
+    data = election_results_missing,
+    listw = queen_W_missing,
+    zero.policy = TRUE
+    )
+```
+
+---
+
+## Model comparison
+
+```{r model-comparison}
+spatialreg::impacts(spatial_lag_y_model_missing, listw = queen_W_missing)
+spatialreg::impacts(spatial_lag_y_model, listw = queen_W)
+```
+
+
+---
+
+## What to do now?
+
+The way how to deal with missing data in geospatial data depends on their general geometric structure. For points, there are established methods, such as [interpolation](https://keen-swartz-3146c4.netlify.app/interpolation.html).
+
+Often these are somewhat ways of aggregating data, which does not help in our case. I'd say that good old imputation techniques might also help:
+- good for multivariate cases
+- yet, they are no spatial techniques and cannot create plausible values for spatial relationships
+  - but imputing spatial relationships would be a matter of contingency anyway
+
+---
+
+## Simplest case of imputation
+
+.pull-left[
+```{r mean-impute-1, eval = FALSE}
+# ~10% missing values
+missing_index <- 
+  sample(
+    1:nrow(election_results), 
+    round(nrow(election_results) * .1, 0)
+    )
+
+election_results_missing <- 
+  election_results
+
+election_results_missing$afd_share[missing_index] <- NA
+
+election_results_missing <-
+  election_results_missing %>% 
+  sf::st_drop_geometry() %>% 
+  mice::mice(method = "norm.predict", m = 1) %>% 
+  mice::complete() %>% 
+  dplyr::left_join(
+    election_results_missing %>% 
+      dplyr::select(-afd_share, -immigrant_share, -inhabitants)
+  ) %>% 
+  sf::st_as_sf()
+```
+] 
+
+.pull-right[
+.center[
+```{r impute-2, echo = FALSE}
+# ~10% missing values
+missing_index <- 
+  sample(
+    1:nrow(election_results), 
+    round(nrow(election_results) * .1, 0)
+    )
+
+election_results_missing <- 
+  election_results
+
+election_results_missing$afd_share[missing_index] <- NA
+
+election_results_missing <-
+  election_results_missing %>% 
+  sf::st_drop_geometry() %>% 
+  mice::mice(method = "norm.predict", m = 1) %>% 
+  mice::complete() %>% 
+  dplyr::left_join(
+    election_results_missing %>% 
+      dplyr::select(-afd_share, -immigrant_share, -inhabitants)
+  ) %>% 
+  sf::st_as_sf()
+
+tm_shape(election_results_missing) +
+  tm_fill("afd_share", palette = "viridis")
+```
+]
+]
+
+---
+
+## And again run the model
+
+```{r spatial-lag-y-missing-2}
+queen_neighborhoods_missing <- 
+  spdep::poly2nb(election_results_missing, queen = TRUE)
+
+queen_W_missing <- 
+  spdep::nb2listw(queen_neighborhoods_missing, style = "W")
+
+spatial_lag_y_model_missing <-
+  spatialreg::lagsarlm(
+    afd_share ~ immigrant_share + inhabitants,
+    data = election_results_missing,
+    listw = queen_W_missing
+    )
+```
+
+---
+
+## ...and compare it with the original one
+
+```{r model-comparison-2}
+spatialreg::impacts(spatial_lag_y_model_missing, listw = queen_W_missing)
+spatialreg::impacts(spatial_lag_y_model, listw = queen_W)
+```
+
+
+
+
+---
+
+class: middle
+
+## Outlook
+
+---
+
+## This week
+
+```{r this-week, echo = FALSE}
+course_content
+```
+
+---
+
+## Introduction
+
+```{r course-content-1, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(1, background = "yellow")
+```
+
+---
+
+## Introduction
+
+Main Messages
+- Geospatial data are relevant in the social sciences
+  - already for a long time
+- `R` can serve as a full-blown Geographic Information System (GIS)
+
+---
+
+## Vector Data
+
+```{r course-content-2, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(2, background = "yellow")
+```
+
+---
+
+## Vector Data
+
+Main Messages
+- Most common geospatial data type
+- Vector data come as points, lines or polygons 
+- Information on the geometries stored in the geometry column
+- Attributes can be assigned to each geometric object
+- Attribute tables are treated as data frames
+
+---
+
+## Mapping
+
+```{r course-content-3, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(4, background = "yellow")
+```
+
+---
+
+## Mapping
+
+Main Messages
+- basis of each map is the geometries of geospatial data
+- spatial distribution of attributes become visible when  defining an attribute and adding color scales
+- layer shapefiles to add more information or for aesthetic reasons
+
+---
+
+## Raster Data
+
+```{r course-content-4, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(5, background = "yellow")
+```
+
+---
+
+## Raster Data
+
+Main Messages
+- Data format for efficient and fast analysis of geospatial data
+- flexible in their application
+- can get rather involved
+- however, straightforward extraction of values
+
+---
+
+## Advanced Data Import
+
+```{r course-content-5, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(6, background = "yellow")
+```
+
+---
+
+## Advanced Data Import
+
+Main Messages
+- Geospatial data tend to be large
+- Often distributed over the internet
+- APIs help in downloading these data
+- can get pretty involved
+
+---
+
+## Applied Data Wrangling
+
+```{r course-content-6, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(7, background = "yellow")
+```
+
+---
+
+## Applied Data Wrangling
+
+Main Messages
+- Georeferenced survey data require handling sensitive data
+- our example of wrangling and linking data (applications may vary)
+- spatial joins are the perfect tool to add geospatial information to other georeferenced data
+
+---
+
+## Investigating Spatial Autocorrelation
+
+```{r course-content-7, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(8, background = "yellow")
+```
+
+---
+
+## Investigating Spatial Autocorrelation
+
+Main Messages
+- spatial autocorrelation is something that must be detected
+- we need a model for that
+  - spatial weight matrices!
+- there are global and local indicators of spatial autocorrelation
+
+---
+
+## Spatial Econometrics
+
+```{r course-content-8, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(10, background = "yellow")
+```
+
+---
+
+## Spatial Econometrics
+
+Main Messages
+- spatial autocorrelation ca also be explained by
+  - diffusion
+  - or spillover effect
+- these effects can be tested but should always be inspected with theory
+- be careful when there are missing data
+
+---
+
+## What's left
+
+Other map types such as
+- cartograms
+- hexagon maps
+- animated maps
+- (more) network graphs
+
+--
+
+GIS techniques, such as
+- geocoding
+- routing
+- cluster analysis
+
+--
+
+More data sources...
+
+  
+---
+
+## Data Sources
+
+Some more information:
+
+- geospatial data are interdisciplinary
+- amount of data feels unlimited
+- data providers and data portals are often specific in the area and/or the information they cover
+
+--
+
+Some random examples: 
+
+- [Eurostat](https://ec.europa.eu/eurostat/web/gisco/geodata)
+- [European Spatial Data Infrastructure](https://inspire.ec.europa.eu/about-inspire/563)
+- [John Hopkins Corona Data Hub and Dashboard](https://coronavirus.jhu.edu/map.html)
+- [US Census Bureau](https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.html)
+- ...
+
+
+---
+
+
+```{r child = "./content/config/sessions_end.Rmd"}
+```
