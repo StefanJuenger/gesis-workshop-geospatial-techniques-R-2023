@@ -149,6 +149,7 @@ We want to import the shapefile the administrative borders of the German states 
 # load library
 library(sf)
 
+# load data
 german_states <- sf::read_sf("./data/VG250_LAN.shp")
 ```
 
