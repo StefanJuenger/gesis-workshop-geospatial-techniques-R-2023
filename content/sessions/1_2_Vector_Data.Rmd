@@ -59,7 +59,7 @@ What usually comes as vector data:
 - rivers and roads, 
 - buildings, cities, and more
 
-Every object is defined by (a) longitude (x) and latitude (y) values(s).
+Every object is defined by longitude (x) and latitude (y) values.
 ]
 
 ---
@@ -84,7 +84,7 @@ woRkshoptools::include_picture("vector_geometries.png")
 
 ## Vector data: Attribute tables
 
-The geometries of vector data hold three information:
+The geometries of vector data hold up to three information:
 - location (points, lines, and polygons)
 - length (lines and polygons)
 - area (polygons)
@@ -142,14 +142,14 @@ woRkshoptools::include_picture("sf.jpg")
 ## Load a shapefile
 
 The first step is, of course, loading the data.
-We want to import the shapefile the administrative borders of the German states (*Bundesländer*) called `VG250_STA.shp`.
+We want to import the shapefile the administrative borders of the German states (*Bundesländer*) called `VG250_LAN.shp`.
 
 
 ```{r load-germanstates-display}
 # load library
 library(sf)
 
-german_states <- sf::read_sf("./data/VG250_STA.shp")
+german_states <- sf::read_sf("./data/VG250_LAN.shp")
 ```
 
 ---
@@ -259,6 +259,7 @@ Especially, point coordinates are often stored in table formats like `.csv` - as
 
 ```{r load-hospitals-display}
 hospitals_df <- readr::read_csv("./data/hospital_points.csv")
+head(hospitals_df)
 ```
 
 
@@ -377,7 +378,7 @@ plot(german_districts)
 
 ## Data Intro: Attributes
 
-Since it would be a little bit boring to work with just one attribute, there's an extra table with more attributes called *attributes_districts.csv*.
+Since it would be a little bit boring to work with just administrative information, there's an extra table with more attributes called *attributes_districts.csv*.
 
 ```{r load-attr-display}
 attributes_districts <- readr::read_csv("./data/attributes_districts.csv") 
@@ -407,6 +408,7 @@ head(german_districts_enhanced, 2)
 ```
 
 ---
+
 ## Add (More) Attributes: Spatial Join, Spatial Intersects, and More
 
 Besides the regular join, we can also perform a so-called *spatial join*.
@@ -414,7 +416,7 @@ For example, we want to count the number of hospitals in each German district.
 
 ```{r spatial-join}
 
-# perfom spatial join 
+# perform spatial join to identify for each hospital the correct district id 
 hospitals_in_districts <- 
   sf::st_join(hospitals_sf, german_districts_enhanced, join = st_within)
 
@@ -422,7 +424,7 @@ hospitals_in_districts <-
 hospital_districts_count <- 
   dplyr::count(hospitals_in_districts, district_id, name = "hospital_count")
 
-# Join the hospital count with the german district 
+# Join the hospital count with the German district a
 german_districts_enhanced <- 
   dplyr::left_join(
     german_districts_enhanced, 
@@ -519,7 +521,7 @@ Two notes:
 # Export as Shapefile
 sf::st_write(
   german_districts_enhanced, 
-  "./participant_materials/districts_enhanced.shp"
+  "./participant_materials/districts_enhanced_epsg3035.shp"
 )
 
 # Export data frame as csv without geometric attributes
@@ -564,10 +566,11 @@ The next step is producing an awesome map! `r emo::ji("confetti")`
 
 .pull-right[
 ```{r cologne-covid, echo=F}
+
 # Import data
 german_districts <- 
   sf::read_sf("./data/VG250_KRS.shp") %>% 
-  dplyr::select(district_id = AGS)
+  dplyr::rename(district_id = AGS)
 
 attributes_districts <- readr::read_csv("./data/attributes_districts.csv") 
 
@@ -577,20 +580,20 @@ german_districts_enhanced <-
   dplyr::left_join(attributes_districts, by = "district_id") %>% 
   sf::st_transform(3035)
 
-# filter konstanz
-konstanz <-
+# filter Mannheim
+mannheim <-
   german_districts_enhanced %>% 
-  dplyr::filter(district_id == "08335")
+  dplyr::filter(district_id == "08222")
 
-# filter surrounding districts, append with Cologne data and select the Covid column
-konstanz_sur <-
+# filter surrounding districts, append with Mannheim data and select the Covid column
+mannheim_sur <-
   german_districts_enhanced %>%
-  dplyr::filter(lengths(sf::st_touches(., konstanz)) > 0) %>% 
-  dplyr::bind_rows(konstanz) %>%   
-  dplyr::select(death_rate)
+  dplyr::filter(lengths(sf::st_touches(., mannheim)) > 0) %>% 
+  dplyr::bind_rows(mannheim) %>%   
+  dplyr::select(covid_deaths_pop)
 
 # plot  
-plot(konstanz_sur)
+plot(mannheim_sur)
 ```
 ]
 

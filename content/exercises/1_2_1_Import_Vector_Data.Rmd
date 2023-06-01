@@ -67,9 +67,9 @@ class(germany) # "sf", "tbl_df", "tbl" and "data.frame"
 
 attr(germany, "sf_column") # geometry
 
-sf::st_crs(germany) # ETRS89, ID = EPSG:4258
+sf::st_crs(germany) # ETRS89, ID = EPSG:25832
 
-names(germany) # Name, Area Type, Area Size, Population Size
+names(germany) # Name, Area Type, Area Size, Population Size ,...
 ```
 
 ```{block, box.title = "3", box.body = list(fill = "white"), box.icon = "fa-star"}
@@ -85,5 +85,5 @@ germany_new <-
   germany %>% 
   dplyr::filter(GF == 4)
 
-germany_new
+plot(germany_new)
 ```
