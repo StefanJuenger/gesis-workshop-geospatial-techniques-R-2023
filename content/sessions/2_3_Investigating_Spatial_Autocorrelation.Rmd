@@ -5,7 +5,7 @@ author: "Stefan Jünger & Anne-Kathrin Stroppe"
 date: June 07, 2022
 institute: |
   GESIS Workshop
-presenter: Anne
+presenter: Stefan
 editor_options: 
   chunk_output_type: console
 ---
@@ -20,7 +20,7 @@ layout: true
 
 ```{r course-content-now, echo = FALSE}
 course_content %>%
-  kableExtra::row_spec(8, background = "yellow")
+  kableExtra::row_spec(9, background = "yellow")
 ```
 
 ---
@@ -138,20 +138,21 @@ Say, we are interested in AfD voting outcomes in relation to ethnic compositions
 
 ```{r load-voting-districts}
 voting_districts <-
-  glue::glue(
-    "https://geoportal.stadt-koeln.de/arcgis/rest/services/Basiskarten/kgg/\\
-    MapServer/20/query?where=objectid+is+not+null&text=&objectIds=&time=&\\
-    geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=\\
-    esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&\\
-    outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=\\
-    &geometryPrecision=&outSR=4326&havingClause=&returnIdsOnly=false&return\\
-    CountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=\\
-    &returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinct\\
-    Values=false&resultOffset=&resultRecordCount=&returnExtentOnly=false&datum\\
-    Transformation=&parameterValues=&rangeValues=&quantizationParameters=&\\
-    featureEncoding=esriDefault&f=geojson"
-  ) %>% 
-  sf::st_read(as_tibble = TRUE, quiet = TRUE) %>%
+  # glue::glue(
+  #   "https://geoportal.stadt-koeln.de/arcgis/rest/services/Basiskarten/kgg/\\
+  #   MapServer/20/query?where=objectid+is+not+null&text=&objectIds=&time=&\\
+  #   geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=\\
+  #   esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&\\
+  #   outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=\\
+  #   &geometryPrecision=&outSR=4326&havingClause=&returnIdsOnly=false&return\\
+  #   CountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=\\
+  #   &returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinct\\
+  #   Values=false&resultOffset=&resultRecordCount=&returnExtentOnly=false&datum\\
+  #   Transformation=&parameterValues=&rangeValues=&quantizationParameters=&\\
+  #   featureEncoding=esriDefault&f=geojson"
+  # ) %>% 
+  sf::st_read("./data/Stimmbezirk.shp") %>% 
+  # sf::st_read(as_tibble = TRUE, quiet = TRUE) %>%
   sf::st_transform(3035) %>% 
   dplyr::transmute(Stimmbezirk = as.numeric(nummer))
 
