@@ -146,7 +146,7 @@ Again, `raster` is the most commonly used package for raster data in `R`.
 
 Some newer developments, e.g., as in the `stars` package, also implement an interface to simple features in `sf`.
 
-The `terra` package helps use more elaborate zonal statistics. The same holds for the `spatstat` package.
+The `terra` package helps to use more elaborate zonal statistics. The same holds for the `spatstat` package.
 
 
 ---
@@ -421,7 +421,7 @@ tm_shape(immigrant_rate) +
 To extract the raster values at a specific point by location we simply use:
 
 ```{r raster-extraction}
-terra::extract(immigrants_cologne, terra::vect(fancy_points))
+terra::extract(immigrants_cologne, terra::vect(fancy_points), ID = FALSE)
 ```
 
 ---
@@ -434,7 +434,8 @@ These information can simply be added to an existing dataset (our points in this
 fancy_points <-
   fancy_points %>% 
   dplyr::mutate(
-    immigrant_rate_value = terra::extract(immigrant_rate, terra::vect(.))
+    immigrant_rate_value = 
+      terra::extract(immigrant_rate, terra::vect(.), ID = FALSE, raw = TRUE)
   )
 
 fancy_points
@@ -484,10 +485,12 @@ We can use spatial buffers of different sizes to extract information on surround
 terra::extract(
   immigrants_cologne, 
   fancy_points %>% 
-    sf::st_buffer(500) %>% 
-    terra::vect(), 
+    sf::st_buffer(500) %>%
+    terra::vect(.),
   fun = mean,
-  na.rm = TRUE
+  na.rm = TRUE,
+  ID = FALSE,
+  raw = TRUE
   )
 ```
 ]
@@ -500,7 +503,9 @@ terra::extract(
     sf::st_buffer(1000) %>% 
     terra::vect(), 
   fun = mean,
-  na.rm = TRUE
+  na.rm = TRUE,
+  ID = FALSE,
+  raw = TRUE
   )
 ```
 ]
@@ -530,38 +535,6 @@ census_stack
 
 ---
 
-## Multi-Band Rasters
-
-.pull-left[ 
-```{r rg-layer}
-germans_cologne <-
-  terra::rast(
-    "./data/germans_cologne.tif"
-  )
-
-dummy_cologne <- germans_cologne
-dummy_cologne[dummy_cologne > 0] <- 3
-
-census_rg <-
-  c(
-    germans_cologne,
-    immigrants_cologne,
-    dummy_cologne
-  )
-```
-]
-
-.pull-right[
-```{r rg-layer-plot, out.width = "75%"}
-terra::plotRGB(
-  census_rg,
-  scale = 639
-)
-```
-]
-
----
-
 ## Non-Regular Grids
 
 In this course, we will only use regular grid-based raster data. But be aware that also non-regular grid data exist.
@@ -582,14 +555,6 @@ Satellite data or remote sensing data are often not only geographically fine-gra
 
 .footnote[Weidmann, N. B., & Theunissen, G. (2021). Estimating Local Inequality from Nighttime Lights. Remote Sensing, 13(22), 4624. https://doi.org/10.3390/rs13224624
 ]
-
----
-
-## Carbon monoxide in the Ukraine after the start of the war
-
-```{r gxc-pic, echo = FALSE, out.width = "85%"}
-woRkshoptools::include_picture("combined_plot.png")
-```
 
 ---
 
@@ -657,7 +622,7 @@ kernel_densities <-
   dplyr::filter(immigrants_cologne > 25) %>% 
   sf::as_Spatial() %>%
   as("ppp") %>% 
-  spatstat.core::density.ppp(sigma = 250) %>% 
+  spatstat.explore::density.ppp(sigma = 250) %>% 
   terra::rast()
 
 terra::crs(kernel_densities) <- "epsg:3035"
