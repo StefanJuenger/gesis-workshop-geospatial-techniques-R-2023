@@ -56,14 +56,14 @@ head(german_districts_enhanced, 2)
 ```
 
 ```{block, box.title = "2", box.body = list(fill = "white"), box.icon = "fa-star"}
-We want a first descriptive visual of the distribution of Covid-19 deaths in Konstanz and the surrounding districts. 
+We want a first descriptive visual of the distribution of Covid-19 deaths in Mannheim and the surrounding districts. 
 Calculate the number of Covid-19 deaths (`death_rate`) by population (`population`) and multiply with 100,000. 
 
-Filter Konstanz (`district_id == "08335"`), find the surrounding districts, and plot Konstanz and its surrounding districts.
+Filter the district of Mannheim (`district_id == "08222"`), find the surrounding districts, and plot Mannheim and its surrounding districts.
 ```
 
 ```{block, opts.label = "clues"}
-You can use the dplyr function `sf::bind_rows()` to combine the two spatial objects, "Konstanz" and "Konstanz Surroundings".
+You can use the dplyr function `sf::bind_rows()` to combine the two spatial objects, "Mannheim" and "Mannheim Surroundings".
 ```
 
 ```{r second-exercise, solution = TRUE}
@@ -72,31 +72,31 @@ german_districts_enhanced <-
   german_districts_enhanced %>% 
   dplyr::mutate(covid_deaths_pop = (death_rate / population) * 100000)
 
-# filter Cologne
-konstanz <-
+# filter Mannheim
+mannheim <-
   german_districts_enhanced %>% 
-  dplyr::filter(district_id == "08335")
+  dplyr::filter(district_id == "08222")
 
-# filter surrounding districts, append with Cologne data and select the Covid column
-konstanz_sur <-
+# filter surrounding districts, append with Mannheim data and select the Covid column
+mannheim_sur <-
   german_districts_enhanced %>%
-  dplyr::filter(lengths(sf::st_touches(., konstanz)) > 0) %>% 
-  dplyr::bind_rows(konstanz) %>%   
+  dplyr::filter(lengths(sf::st_touches(., mannheim)) > 0) %>% 
+  dplyr::bind_rows(mannheim) %>%   
   dplyr::select(covid_deaths_pop)
 
 # plot  
-plot(konstanz_sur)
+plot(mannheim_sur)
 ```
 
 ```{block, box.title = "3", box.body = list(fill = "white"), box.icon = "fa-star"}
-Save your data set of Konstanz and its surrounding districts as an ESRI Shapefile. 
+Save your data set of Mannheim and its surrounding districts as an ESRI Shapefile. 
 ```
 
 ```{r third-exercise, solution = TRUE, eval = FALSE}
 # Export as shapefile
 sf::st_write(
   cologne_sur, 
-  dsn = "./data/participant_material/cologne_covid19_epsg3035.shp", 
+  dsn = "./data/participant_materials/mannheim_covid19_epsg3035.shp", 
   delete_layer = TRUE
 )
 ```

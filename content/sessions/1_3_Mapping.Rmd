@@ -48,6 +48,7 @@ woRkshoptools::include_picture("fun_with_flags.jpg")
 
 .pull-right[
 ```{r corona-cologne, echo = FALSE}
+
 corona_cologne <-
   sf::read_sf(
     "./data/corona_cologne.shp"
@@ -561,6 +562,656 @@ class: middle
 [Exercise](https://stefanjuenger.github.io/gis_socsci_konstanz/exercises/1_3_2_Fun_with_Maps.html)
 
 [Solution](https://stefanjuenger.github.io/gis_socsci_konstanz/solutions/1_3_2_Fun_with_Maps.html)
+
+---
+
+## Map Examples: Covid-19 incidences and Hospital Beds
+
+Instead of placing maps next to each other, we can also explore spatial correlations by adding layers.
+Another benefit of layering: We can make our map more realistic and aesthetic.
+
+For example, we can add a background layer of neighboring countries, add a layer of German cities, or the German states' borders for orientation.
+Each layer can visualize another attribute of our map.
+
+For today, we want to add a layer of hospital point data to a Covid-19 incidence map.
+
+
+```{r load-mapdata, echo = F,  warning = F, massage = F}
+
+# import data
+hospitals_sf <- 
+    readr::read.csv("./data/hospital_points.csv", 
+                    header = T, fill = T, sep = ",") %>%
+    sf::st_as_sf(., coords = c("X", "Y"),
+                 crs = 3035)  %>% 
+    dplyr::mutate(beds = as.numeric(beds))
+
+attributes_districts <- 
+  readr::read_csv("./data/attributes_districts.csv") 
+
+german_districts_enhanced <- 
+  sf::read_sf("./data/VG250_KRS.shp") %>% 
+  sf::st_transform(crs = 3035)  %>% 
+  dplyr::rename(district_id = AGS) %>% 
+  dplyr::select(district_id) %>% 
+  dplyr::left_join(attributes_districts, by = "district_id")  
+```
+
+---
+
+## Map Examples: Covid-19 Incidences and Hospital Beds
+
+.pull-left[
+```{r hospital-map-disp, eval=F}
+
+# map the hospitals on the covid-19 map
+hospital_covid_map <- 
+  tm_shape(german_districts_enhanced) + 
+  tm_polygons(col = 
+            "death_rate",
+          title = 
+            "Death Rate",
+          palette = "viridis",
+          n = 10
+          ) +
+  tm_layout(main.title = 
+              "Covid Death Rate in Germany",
+            main.title.color = 
+              "black" ) +
+  tm_legend(legend.outside = 
+              TRUE,
+            legend.outside.position = 
+              "left") +
+  # Add hospital data
+  tm_shape(hospitals_sf) + 
+  tm_dots("beds", 
+          col = 
+            "grey",
+          alpha = 0.4,
+          title.size = 
+            "Number of Hospital Beds") 
+
+hospital_covid_map
+
+```
+]
+
+.pull-right[
+```{r hospital-map, echo=F, warning=F, message=F}
+
+# map the hospitals on the covid-19 map
+hospital_covid_map <- 
+  tm_shape(german_districts_enhanced) + 
+  tm_fill(col = 
+            "death_rate",
+          title = 
+            "Death Rate",
+          palette = "viridis",
+          n = 10
+          ) +
+  
+  tm_layout(main.title = 
+              "Covid Death Rate in Germany",
+            main.title.color = 
+              "black" ) +
+  tm_legend(legend.outside = 
+              TRUE,
+            legend.outside.position = 
+              "left") +
+  # Add hospital data
+  tm_shape(hospitals_sf) + 
+  tm_dots("beds", 
+          col = 
+            "white",
+          alpha = 0.4,
+          title.size = 
+            "Number of Hospital Beds") 
+
+ 
+hospital_covid_map
+```
+]
+---
+
+## Germand Federal Election 2021
+
+```{r btw-21_map, echo = F, warning = F, message = F}
+
+
+# Load packages 
+library(sf)
+library(tidyverse)
+library(tmap)
+
+## District Shapefile
+german_districts <- 
+  # load data
+  sf::read_sf("./data/VG250_KRS.shp") %>% 
+  # transform to correct crs
+  sf::st_transform(crs = 3035) %>% 
+  # subsetting land area of Germany
+  dplyr::filter(GF == 4) %>% 
+  # only keep necessary cols
+  dplyr::select(AGS,geometry) 
+
+## BL Shapefile
+german_states <-
+  sf::read_sf("./data/VG250_LAN.shp") %>%  
+  # transform to correct crs
+  sf::st_transform(crs = 3035) %>% 
+  # subsetting land area of Germany
+  dplyr::filter(GF == 4) %>% 
+  # only keep necessary cols
+  dplyr::select(AGS,geometry) 
+
+
+
+
+## German Federal Election Results 21 
+### Abfrage bundeswahlleiter, 28.02.22
+### Wahlergebnisse nach kreisfreien Städten und Landkeisen
+### https://www.bundeswahlleiter.de/bundestagswahlen/2021/ergebnisse/weitere-ergebnisse.html
+
+btw21_krs <- 
+  # load data
+  read.csv2("./data/btw2021kreis_zweitstimme.csv",
+                   header= T,
+                   fill = T,
+                   sep= ";",
+                   dec = ",",   
+                   colClasses=c("character","character",rep("numeric",44)),
+                   encoding = "UTF-8", 
+                   strip.white = TRUE) %>% 
+  # correct name first col 
+  dplyr::rename(., AGS = 1)  %>% 
+  # compute vote shares
+  dplyr::mutate(
+    AGS = stringr::str_pad(.$AGS, 5, pad = "0"),
+    turnout = ((Ungültige + Gültige)/Wahlberechtigte) *100,
+    union_shr = ((CDU + CSU) / Gültige) * 100,
+    afd_shr = (AfD / Gültige) * 100,
+    fdp_shr = (FDP / Gültige) * 100,
+    spd_shr = (SPD / Gültige) * 100,
+    linke_shr = (DIE.LINKE / Gültige) * 100,
+    green_shr = (GRÜNE / Gültige) * 100,
+    sonstige_shr = (rowSums(.[14:46])/Gültige) * 100) %>% 
+  # select necessary vars
+  dplyr::select(AGS,turnout, ends_with(c("_shr"))) %>% 
+  # remove mean over all districts
+  dplyr::filter(. , AGS != "00000") %>% 
+  # aggregate east and west berlin
+  dplyr::mutate(. , AGS = ifelse(AGS == "11100" | AGS == "11200", 
+                                 "11000", AGS)) %>%
+  group_by(AGS) %>% 
+  summarise(across(everything(), list(mean))) %>% 
+  rename_with(~str_remove(., '_1'))
+
+
+## correct for district that was reformed in 2022
+btw21_krs <-
+  btw21_krs %>% 
+  filter(., AGS == "16063") %>% 
+  mutate( AGS = "16056") %>% 
+  bind_rows(btw21_krs,.)
+
+## join election results to shapefile
+german_districts_btw <- 
+  german_districts %>% 
+  left_join(. , btw21_krs, by = "AGS") 
+
+# Prepare for mapping: Dataset for each party plus color
+
+union <-
+  german_districts_btw %>% 
+  dplyr::select(union_shr, geometry) %>% 
+  dplyr::mutate(party = "Union",
+         color = "#030303") %>% 
+  dplyr::rename(party_shr = union_shr)
+
+spd <-
+  german_districts_btw %>% 
+  dplyr::select(spd_shr, geometry) %>% 
+  dplyr::mutate(party = "SPD",
+         color = "#FF0000") %>% 
+  dplyr::rename(party_shr = spd_shr)
+
+fdp <-
+  german_districts_btw %>% 
+  dplyr::select(fdp_shr, geometry) %>% 
+  dplyr::mutate(party = "FDP",
+         color = "#FFFF00") %>% 
+  dplyr::rename(party_shr = fdp_shr)
+
+gruene <-
+  german_districts_btw %>% 
+  dplyr::select(green_shr, geometry) %>% 
+  dplyr::mutate(party = "Gruene",
+         color = "#66CD00") %>% 
+  dplyr::rename(party_shr = green_shr)
+
+linke <-
+  german_districts_btw %>% 
+  dplyr::select(linke_shr, geometry) %>% 
+  dplyr::mutate(party = "Linke",
+         color = "#8A2BE2") %>% 
+  dplyr::rename(party_shr =linke_shr)
+
+afd <-
+  german_districts_btw %>% 
+  dplyr::select(afd_shr, geometry) %>% 
+  dplyr::mutate(party = "AfD",
+         color = "#1E90FF") %>% 
+  dplyr::rename(party_shr = afd_shr)
+
+# bind the datasets
+party_shares <- rbind(union, spd, fdp, gruene, linke, afd)
+
+# plot
+
+## nested dataset
+by_party <- party_shares %>% 
+  group_by(party, color) %>% 
+  nest()
+
+## add list of party colors for figures
+party_colors <- c("#030303", "#FF0000", "#FFFF00", "#66CD00",
+                  "#8A2BE2", "#1E90FF")
+
+# custom party color palettes
+parties <- c("Union", "SPD", "FDP", "GRÜNE", "LINKE", "AfD")
+
+party_palette_fcts <- map(party_colors, ~ colorRampPalette(c("#FFFFFF",.x)))
+names(party_palette_fcts) <- paste0(parties,"_palette")
+
+union_palette <- party_palette_fcts[[1]](10)
+spd_palette <- party_palette_fcts[[2]](10)
+fdp_palette <- party_palette_fcts[[3]](10)
+gruene_palette <- party_palette_fcts[[4]](10)
+linke_palette <- party_palette_fcts[[5]](10)
+afd_palette <- party_palette_fcts[[6]](10)
+
+# labels for vote shares
+vs_labels <- c("0 bis 5", "5 bis 10", "10 bis 15", "15 bis 20", "20 bis 25",
+               "25 bis 30", "30 bis 35", "35 bis 40", "40 bis 45", "45 bis 50")
+
+# maps
+uni_btwshare_map <- tm_shape(subset(party_shares, party == "Union")) +
+  tm_polygons("party_shr",
+              title = "CDU/CSU",
+              palette = union_palette,
+              labels = vs_labels,
+              style = "fixed",
+              n = 10,
+              breaks = c(0,5,10,15,20,25,30,35,40,45,50),
+              border.alpha = 0) +
+  tm_shape(german_states) +
+  tm_polygons("AGS",
+              alpha = 0,
+              border.col = "lightgrey",
+              legend.show = F) +
+  tm_layout(legend.title.size = 1)
+
+spd_btwshare_map <- tm_shape(subset(party_shares, party == "SPD")) +
+  tm_polygons("party_shr",
+              title = "SPD",
+              palette = spd_palette,
+              labels = vs_labels,
+              style = "fixed",
+              n = 10,
+              breaks = c(0,5,10,15,20,25,30,35,40,45,50),
+              border.alpha = 0) +
+  tm_shape(german_states) +
+  tm_polygons("AGS",
+              alpha = 0,
+              border.col = "lightgrey",
+              legend.show = F) +
+  tm_layout(legend.title.size = 1)
+
+fdp_btwshare_map <- tm_shape(subset(party_shares, party == "FDP")) +
+  tm_polygons("party_shr",
+              title = "FDP",
+              palette = fdp_palette,
+              labels = vs_labels,
+              style = "fixed",
+              n = 10,
+              breaks = c(0,5,10,15,20,25,30,35,40,45,50),
+              border.alpha = 0) +
+  tm_shape(german_states) +
+  tm_polygons("AGS",
+              alpha = 0,
+              border.col = "lightgrey",
+              legend.show = F) +
+  tm_layout(legend.title.size = 1)
+
+gru_btwshare_map <- tm_shape(subset(party_shares, party == "Gruene")) +
+  tm_polygons("party_shr",
+              title = "Grüne",
+              palette = gruene_palette,
+              labels = vs_labels,
+              style = "fixed",
+              n = 10,
+              breaks = c(0,5,10,15,20,25,30,35,40,45,50),
+              border.alpha = 0) +
+  tm_shape(german_states) +
+  tm_polygons("AGS",
+              alpha = 0,
+              border.col = "lightgrey",
+              legend.show = F) +
+  tm_layout(legend.title.size = 1)
+
+lin_btwshare_map <- tm_shape(subset(party_shares, party == "Linke")) +
+  tm_polygons("party_shr",
+              title = "DIE LINKE",
+              palette = linke_palette,
+              labels = vs_labels,
+              style = "fixed",
+              n = 10,
+              breaks = c(0,5,10,15,20,25,30,35,40,45,50),
+              border.alpha = 0) +
+  tm_shape(german_states) +
+  tm_polygons("AGS",
+              alpha = 0,
+              border.col = "lightgrey",
+              legend.show = F) +
+  tm_layout(legend.title.size = 1)
+
+afd_btwshare_map <- tm_shape(subset(party_shares, party == "AfD")) +
+  tm_polygons("party_shr",
+              title = "AfD",
+              palette = afd_palette,
+              labels = vs_labels,
+              style = "fixed",
+              n = 10,
+              breaks = c(0,5,10,15,20,25,30,35,40,45,50),
+              border.alpha = 0) +
+  tm_shape(german_states) +
+  tm_polygons("AGS",
+              alpha = 0,
+              border.col = "lightgrey",
+              legend.show = F) +
+  tm_layout(legend.title.size = 1)
+
+# combine maps
+all_btwshare_map <- tmap_arrange(uni_btwshare_map, spd_btwshare_map, fdp_btwshare_map,
+                                 gru_btwshare_map, lin_btwshare_map, afd_btwshare_map,
+                                 ncol = 3)  
+all_btwshare_map
+
+# tmap_save(all_btwshare_map, filename = "party_vote_shares_district_map.eps", dpi = 600)
+
+
+```
+
+---
+
+## The Corresponding Code for the Election Results
+
+```{r btw-21_map, eval = F}
+
+
+# Load packages 
+library(sf)
+library(tidyverse)
+library(tmap)
+
+## District Shapefile
+german_districts <- 
+  # load data
+  sf::read_sf("./data/VG250_KRS.shp") %>% 
+  # transform to correct crs
+  sf::st_transform(crs = 3035) %>% 
+  # subsetting land area of Germany
+  dplyr::filter(GF == 4) %>% 
+  # only keep necessary cols
+  dplyr::select(AGS,geometry) 
+
+## BL Shapefile
+german_states <-
+  sf::read_sf("./data/VG250_LAN.shp") %>%  
+  # transform to correct crs
+  sf::st_transform(crs = 3035) %>% 
+  # subsetting land area of Germany
+  dplyr::filter(GF == 4) %>% 
+  # only keep necessary cols
+  dplyr::select(AGS,geometry) 
+
+
+
+
+## German Federal Election Results 21 
+### Abfrage bundeswahlleiter, 28.02.22
+### Wahlergebnisse nach kreisfreien Städten und Landkeisen
+### https://www.bundeswahlleiter.de/bundestagswahlen/2021/ergebnisse/weitere-ergebnisse.html
+
+btw21_krs <- 
+  # load data
+  read.csv2("./data/btw2021kreis_zweitstimme.csv",
+                   header= T,
+                   fill = T,
+                   sep= ";",
+                   dec = ",",   
+                   colClasses=c("character","character",rep("numeric",44)),
+                   encoding = "UTF-8", 
+                   strip.white = TRUE) %>% 
+  # correct name first col 
+  dplyr::rename(., AGS = 1)  %>% 
+  # compute vote shares
+  dplyr::mutate(
+    AGS = stringr::str_pad(.$AGS, 5, pad = "0"),
+    turnout = ((Ungültige + Gültige)/Wahlberechtigte) *100,
+    union_shr = ((CDU + CSU) / Gültige) * 100,
+    afd_shr = (AfD / Gültige) * 100,
+    fdp_shr = (FDP / Gültige) * 100,
+    spd_shr = (SPD / Gültige) * 100,
+    linke_shr = (DIE.LINKE / Gültige) * 100,
+    green_shr = (GRÜNE / Gültige) * 100,
+    sonstige_shr = (rowSums(.[14:46])/Gültige) * 100) %>% 
+  # select necessary vars
+  dplyr::select(AGS,turnout, ends_with(c("_shr"))) %>% 
+  # remove mean over all districts
+  dplyr::filter(. , AGS != "00000") %>% 
+  # aggregate east and west berlin
+  dplyr::mutate(. , AGS = ifelse(AGS == "11100" | AGS == "11200", 
+                                 "11000", AGS)) %>%
+  group_by(AGS) %>% 
+  summarise(across(everything(), list(mean))) %>% 
+  rename_with(~str_remove(., '_1'))
+
+
+## correct for district that was reformed in 2022
+btw21_krs <-
+  btw21_krs %>% 
+  filter(., AGS == "16063") %>% 
+  mutate( AGS = "16056") %>% 
+  bind_rows(btw21_krs,.)
+
+## join election results to shapefile
+german_districts_btw <- 
+  german_districts %>% 
+  left_join(. , btw21_krs, by = "AGS") 
+
+# Prepare for mapping: Dataset for each party plus color
+
+union <-
+  german_districts_btw %>% 
+  dplyr::select(union_shr, geometry) %>% 
+  dplyr::mutate(party = "Union",
+         color = "#030303") %>% 
+  dplyr::rename(party_shr = union_shr)
+
+spd <-
+  german_districts_btw %>% 
+  dplyr::select(spd_shr, geometry) %>% 
+  dplyr::mutate(party = "SPD",
+         color = "#FF0000") %>% 
+  dplyr::rename(party_shr = spd_shr)
+
+fdp <-
+  german_districts_btw %>% 
+  dplyr::select(fdp_shr, geometry) %>% 
+  dplyr::mutate(party = "FDP",
+         color = "#FFFF00") %>% 
+  dplyr::rename(party_shr = fdp_shr)
+
+gruene <-
+  german_districts_btw %>% 
+  dplyr::select(green_shr, geometry) %>% 
+  dplyr::mutate(party = "Gruene",
+         color = "#66CD00") %>% 
+  dplyr::rename(party_shr = green_shr)
+
+linke <-
+  german_districts_btw %>% 
+  dplyr::select(linke_shr, geometry) %>% 
+  dplyr::mutate(party = "Linke",
+         color = "#8A2BE2") %>% 
+  dplyr::rename(party_shr =linke_shr)
+
+afd <-
+  german_districts_btw %>% 
+  dplyr::select(afd_shr, geometry) %>% 
+  dplyr::mutate(party = "AfD",
+         color = "#1E90FF") %>% 
+  dplyr::rename(party_shr = afd_shr)
+
+# bind the datasets
+party_shares <- rbind(union, spd, fdp, gruene, linke, afd)
+
+# plot
+
+## nested dataset
+by_party <- party_shares %>% 
+  group_by(party, color) %>% 
+  nest()
+
+## add list of party colors for figures
+party_colors <- c("#030303", "#FF0000", "#FFFF00", "#66CD00",
+                  "#8A2BE2", "#1E90FF")
+
+# custom party color palettes
+parties <- c("Union", "SPD", "FDP", "GRÜNE", "LINKE", "AfD")
+
+party_palette_fcts <- map(party_colors, ~ colorRampPalette(c("#FFFFFF",.x)))
+names(party_palette_fcts) <- paste0(parties,"_palette")
+
+union_palette <- party_palette_fcts[[1]](10)
+spd_palette <- party_palette_fcts[[2]](10)
+fdp_palette <- party_palette_fcts[[3]](10)
+gruene_palette <- party_palette_fcts[[4]](10)
+linke_palette <- party_palette_fcts[[5]](10)
+afd_palette <- party_palette_fcts[[6]](10)
+
+# labels for vote shares
+vs_labels <- c("0 bis 5", "5 bis 10", "10 bis 15", "15 bis 20", "20 bis 25",
+               "25 bis 30", "30 bis 35", "35 bis 40", "40 bis 45", "45 bis 50")
+
+# maps
+uni_btwshare_map <- tm_shape(subset(party_shares, party == "Union")) +
+  tm_polygons("party_shr",
+              title = "CDU/CSU",
+              palette = union_palette,
+              labels = vs_labels,
+              style = "fixed",
+              n = 10,
+              breaks = c(0,5,10,15,20,25,30,35,40,45,50),
+              border.alpha = 0) +
+  tm_shape(german_states) +
+  tm_polygons("AGS",
+              alpha = 0,
+              border.col = "lightgrey",
+              legend.show = F) +
+  tm_layout(legend.title.size = 1)
+
+spd_btwshare_map <- tm_shape(subset(party_shares, party == "SPD")) +
+  tm_polygons("party_shr",
+              title = "SPD",
+              palette = spd_palette,
+              labels = vs_labels,
+              style = "fixed",
+              n = 10,
+              breaks = c(0,5,10,15,20,25,30,35,40,45,50),
+              border.alpha = 0) +
+  tm_shape(german_states) +
+  tm_polygons("AGS",
+              alpha = 0,
+              border.col = "lightgrey",
+              legend.show = F) +
+  tm_layout(legend.title.size = 1)
+
+fdp_btwshare_map <- tm_shape(subset(party_shares, party == "FDP")) +
+  tm_polygons("party_shr",
+              title = "FDP",
+              palette = fdp_palette,
+              labels = vs_labels,
+              style = "fixed",
+              n = 10,
+              breaks = c(0,5,10,15,20,25,30,35,40,45,50),
+              border.alpha = 0) +
+  tm_shape(german_states) +
+  tm_polygons("AGS",
+              alpha = 0,
+              border.col = "lightgrey",
+              legend.show = F) +
+  tm_layout(legend.title.size = 1)
+
+gru_btwshare_map <- tm_shape(subset(party_shares, party == "Gruene")) +
+  tm_polygons("party_shr",
+              title = "Grüne",
+              palette = gruene_palette,
+              labels = vs_labels,
+              style = "fixed",
+              n = 10,
+              breaks = c(0,5,10,15,20,25,30,35,40,45,50),
+              border.alpha = 0) +
+  tm_shape(german_states) +
+  tm_polygons("AGS",
+              alpha = 0,
+              border.col = "lightgrey",
+              legend.show = F) +
+  tm_layout(legend.title.size = 1)
+
+lin_btwshare_map <- tm_shape(subset(party_shares, party == "Linke")) +
+  tm_polygons("party_shr",
+              title = "DIE LINKE",
+              palette = linke_palette,
+              labels = vs_labels,
+              style = "fixed",
+              n = 10,
+              breaks = c(0,5,10,15,20,25,30,35,40,45,50),
+              border.alpha = 0) +
+  tm_shape(german_states) +
+  tm_polygons("AGS",
+              alpha = 0,
+              border.col = "lightgrey",
+              legend.show = F) +
+  tm_layout(legend.title.size = 1)
+
+afd_btwshare_map <- tm_shape(subset(party_shares, party == "AfD")) +
+  tm_polygons("party_shr",
+              title = "AfD",
+              palette = afd_palette,
+              labels = vs_labels,
+              style = "fixed",
+              n = 10,
+              breaks = c(0,5,10,15,20,25,30,35,40,45,50),
+              border.alpha = 0) +
+  tm_shape(german_states) +
+  tm_polygons("AGS",
+              alpha = 0,
+              border.col = "lightgrey",
+              legend.show = F) +
+  tm_layout(legend.title.size = 1)
+
+# combine maps
+all_btwshare_map <- tmap_arrange(uni_btwshare_map, spd_btwshare_map, fdp_btwshare_map,
+                                 gru_btwshare_map, lin_btwshare_map, afd_btwshare_map,
+                                 ncol = 3)  
+all_btwshare_map
+
+# tmap_save(all_btwshare_map, filename = "party_vote_shares_district_map.eps", dpi = 600)
+
+
+```
 
 ---
 

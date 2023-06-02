@@ -1,0 +1,4 @@
+btw2021kreis.csv
+- Abfrage bundeswahlleiter, 28.02.22
+- Wahlergebnisse nach kreisfreien Städten und Landkeisen
+- https://www.bundeswahlleiter.de/bundestagswahlen/2021/ergebnisse/weitere-ergebnisse.html
