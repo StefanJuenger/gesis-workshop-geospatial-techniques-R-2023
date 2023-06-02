@@ -578,13 +578,16 @@ attributes_districts <- readr::read_csv("./data/attributes_districts.csv")
 # Join data and transform
 german_districts_enhanced <- 
   german_districts %>% 
+  sf::st_transform(3035) %>% 
   dplyr::left_join(attributes_districts, by = "district_id") %>% 
-  sf::st_transform(3035)
+  dplyr::mutate(covid_deaths_pop = (death_rate / population) * 100000)
+
 
 # filter Mannheim
 mannheim <-
   german_districts_enhanced %>% 
   dplyr::filter(district_id == "08222")
+
 
 # filter surrounding districts, append with Mannheim data and select the Covid column
 mannheim_sur <-
