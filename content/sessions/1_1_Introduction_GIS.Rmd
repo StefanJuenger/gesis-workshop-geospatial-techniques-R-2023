@@ -25,10 +25,6 @@ By the end of this course, you should...
 - Be able to create maps based on your very own processed geospatial data in `R`
 - Feel prepared for (your first steps in) spatial analysis
  
---
-
-**A lot of the materials stem from previous courses but were updated and refined in preperation of this one. I'd like to thank my wonderful colleague Anne-Kathrin Stroppe for her value contribution to this corpus** 
-
 ---
 
 ## Keep Calm and Carry On Learning/Using `R`
@@ -41,14 +37,14 @@ woRkshoptools::include_picture("r_first_then.png")
 
 ---
 
-## I am (Necessarily) Selective
+## We are (Necessarily) Selective
 
 There's a multitude of spatial `R` packages
-- I cannot cover all of them
+- We cannot cover all of them
   - and we cannot cover all functions
-- You may have used some I am not familiar with
+- You may have used some we are not familiar with
 
-I show the use of packages I exploit in practice
+We will show the use of packages we exploit in practice
 - There's always another way of doing things in `R`
 - Don't hesitate to bring up your solutions
 
@@ -63,7 +59,7 @@ I show the use of packages I exploit in practice
   - Affinity for using script-based languages
   - Don't be scared to wrangle data with complex structures
 - Working versions of `R` (and `Rstudio`) on your computer 
-  - Ideally, with the packages installed, I asked you upfront
+  - Ideally, with the packages installed, we asked you upfront
 ]
 
 .pull-right[
@@ -76,7 +72,7 @@ woRkshoptools::include_picture("i-love-programming.jpg")
   
 ---
 
-## About Me
+## About Us
 
 **Stefan Jünger**
 
@@ -99,9 +95,25 @@ woRkshoptools::include_picture("Stefan.png")
 
 .small[
 [stefan.juenger@gesis.org](mailto:stefan.juenger@gesis.org) |
-[@StefanJuenger](https://twitter.com/StefanJuenger) |
 [https://stefanjuenger.github.io](https://stefanjuenger.github.io)
 ]
+
+---
+
+## About Us
+
+**Anne-Kathrin Stroppe**
+
+- Doctoral researcher in the team National Surveys at the GESIS Data Archive
+- Data Curator for the German Longitudinal Election Study
+- Research focuses on political and electoral geography
+- (other) research interests:
+  - determinants of electoral behavior
+  - infrastructural inequalities & political alienation
+  - quantitative methods of the social sciences
+
+[anne-kathrin.stroppe@gesis.org](mailto:anne-kathrin.stroppe@gesis.org) |
+[@AStroppe](https://twitter.com/AStroppe)
 
 ---
 
@@ -131,7 +143,7 @@ woRkshoptools::include_picture("so-tell-me-5be02d.jpg")
 - Feel free to ask questions at any time
 - Slides and other materials are available at
 
-.center[`https://github.com/StefanJuenger/gis_socsci_konstanz`]
+.center[`https://github.com/StefanJuenger/gesis-workshop-geospatial-techniques-R-2023`]
 
 ---
 
@@ -336,7 +348,6 @@ woRkshoptools::include_picture("fig_projections.png")
 
 .tinyisher[Source: Statistical Office of the European Union Eurostat (2018) / Jünger, 2019]
 
-
 ---
 
 ## Types of CRS
@@ -348,7 +359,6 @@ woRkshoptools::include_picture("fig_projections.png")
 **Projected CRS**
 - projection of geometries on a (flat) surface
 - straight lines become bent lines
-
 
 (There are also geocentric CRS requiring also a z-coordinate...)
 
@@ -369,7 +379,6 @@ woRkshoptools::include_picture("layers_meme.jpg")
 ## Old Standard: `PROJ.4` Strings
 
 This is how your information about the CRS are defined in a classic standard:
-
 
 ```
 +proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs 
@@ -432,7 +441,7 @@ In showSRID(uprojargs, format = "PROJ", multiline = "NO") :
   Discarded datum European_Terrestrial_Reference_System_1989 in CRS definition
 ```
 
-I have turned these warnings off for legibility reasons in my slides.
+We have turned these warnings off for legibility reasons in our slides.
 
 ---
 
@@ -531,9 +540,9 @@ We will use plenty of different packages during the course, but only a few are o
 class: middle
 ## Exercise 1_1_1: Package Installation
 
-[Exercise](https://stefanjuenger.github.io/gis_socsci_konstanz/exercises/1_1_1_Package_Installation.html)
+[Exercise](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/1_1_1_Package_Installation.html)
 
-[Solution](https://stefanjuenger.github.io/gis_socsci_konstanz/solutions/1_1_1_Package_Installation.html)
+[Solution](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/solutions/1_1_1_Package_Installation.html)
 
 ---
 
@@ -655,7 +664,7 @@ woRkshoptools::include_picture("styler_addin.png")
 
 ## Namespaces `::`
 
-I heavily use namespace declarations in code: `::`. It's a way to safely call a function if there are the same function names in other packages loaded. Usually, you don't need that, but it's a transparent way to show from which package you call which function. 
+I (Stefan) heavily use namespace declarations in code: `::`. It's a way to safely call a function if there are the same function names in other packages loaded. Usually, you don't need that, but it's a transparent way to show from which package you call which function. 
 
 No namespaces:
 
