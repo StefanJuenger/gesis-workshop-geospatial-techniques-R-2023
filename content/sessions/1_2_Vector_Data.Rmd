@@ -333,9 +333,9 @@ sf::st_drop_geometry(german_states) %>%
 class: middle
 ## Exercise 1_2_1: Import Vector Data 
 
-[Exercise](https://stefanjuenger.github.io/gis_socsci_konstanz/exercises/1_2_1_Import_Vector_Data.html)
+[Exercise](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/1_2_1_Import_Vector_Data.html)
 
-[Solution](https://stefanjuenger.github.io/gis_socsci_konstanz/solutions/1_2_1_Import_Vector_Data.html)
+[Solution](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/solutions/1_2_1_Import_Vector_Data.html)
 
 ---
 
@@ -546,9 +546,9 @@ sf::st_write(
 class: middle
 ## Exercise 1_2_2: Manipulate Vector Data 
 
-[Exercise](https://stefanjuenger.github.io/gis_socsci_konstanz/exercises/1_2_2_Manipulate_Vector_Data.html)
+[Exercise](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/1_2_2_Manipulate_Vector_Data.html)
 
-[Solution](https://stefanjuenger.github.io/gis_socsci_konstanz/solutions/1_2_2_Manipulate_Vector_Data.html)
+[Solution](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/solutions/1_2_2_Manipulate_Vector_Data.html)
 
 ---
 
