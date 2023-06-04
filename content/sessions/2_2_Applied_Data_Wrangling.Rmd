@@ -59,44 +59,36 @@ woRkshoptools::include_picture("geo_surveys.png")
 
 ---
 
-## Prerequisite: Geocoding
+## An Example Workflow
 
 .pull-left[
-Indirect spatial references have to be converted into direct spatial references
-$\rightarrow$ Addresses to geo-coordinates
+From the addresses to analyses with georeferenced survey data, several steps and challenges along the way. We will talk about:
 
-Different service providers can be used
-- e.g., Google, Bing, OSM
-- In Germany: Federal Agency of Cartography and Geodesy (BKG)
+- Data Protection & Data Access
+- Geocoding
+- Spatial Data Linking
+- Applied Examples
 ]
 
 .pull-right[
-</br>
-</br>
-```{r pic-geocoding, echo = FALSE}
-woRkshoptools::include_picture("geocoding.png")
+```{r pic-varreport, echo = FALSE, out.width="75%"}
+woRkshoptools::include_picture("varreport.png")
 ```
 ]
 
 ---
 
-## Georeferenced Survey Data $\neq$ Geospatial Data
+## Data Protection
 
-.pull-left[
-We must not store geo-coordinates and survey data in one dataset
-- Differences to geospatial data
-- More complicated workflow to work with (see Challenges)
-]
+</br>
+</br>
+That‘s one of the biggest issues
+- Explicit spatial references increase the risk of re-identifying anonymized survey respondents
+- Can occur during the processing of data but also during the analysis
 
-.pull-right[
-```{r pic-linking-workflow, echo = FALSE, out.width="85%"}
-woRkshoptools::include_picture("fig_linking_workflow_simple.png")
-```
+</br>
 
-.right[.tinyisher[Jünger, 2019]]
-]
-
----
+.center[**Affects all phases of research and data management!**]
 
 ## Data Availability
 
@@ -124,61 +116,6 @@ https://datasetsearch.research.google.com/
 
 ---
 
-## Technical Procedures
-
-.pull-left[
-</br>
-.center[<img src="./img/angry_cat.gif" width="75%">]
-.center[.tinyisher[https://giphy.com/gifs/VbnUQpnihPSIgIXuZv]]
-]
-
-
-.pull-right[
-Geocoding
-- Reasonable automated procedure
-- But differ in quality and access rights
-- High risk for data protection
-
-GIS procedures
-- Requires exploiting specialized software
-- Can get complex and resource-intensive
-]
-
----
-
-## Data Protection
-
-</br>
-</br>
-That‘s one of the biggest issues
-- Explicit spatial references increase the risk of re-identifying anonymized survey respondents
-- Can occur during the processing of data but also during the analysis
-
-</br>
-
-.center[**Affects all phases of research and data management!**]
-
----
-
-## Legal Regulations
-
-.pull-left[
-Storing personal information such as addresses in the same place as actual survey attributes is not allowed in Germany
-- Projects keep them in separate locations
-- Can only be matched with a correspondence table
-- Necessary to conduct data linking
-]
-
-.pull-right[
-```{r pic-linking-2, echo = FALSE}
-woRkshoptools::include_picture("fig_linking_workflow_simple.png")
-```
-
-.right[.tinyisher[Jünger, 2019]]
-]
-
----
-
 ## Distribution & Re-Identification Risk
 
 Data may still be sensitive
@@ -200,13 +137,90 @@ woRkshoptools::include_picture("safe_room.png")
 
 ---
 
+## Legal Regulations in Data Processing
+
+.pull-left[
+Storing personal information such as addresses in the same place as actual survey attributes is not allowed in Germany
+- Projects keep them in separate locations
+- Can only be matched with a correspondence table
+- Necessary to conduct data linking
+]
+
+.pull-right[
+```{r pic-linking-2, echo = FALSE}
+woRkshoptools::include_picture("fig_linking_workflow_simple.png")
+```
+
+.right[.tinyisher[Jünger, 2019]]
+]
+
+---
+
+## Geocoding
+
+Indirect spatial references have to be converted into direct spatial references $\rightarrow$ Addresses to geo-coordinates
+
+Different service providers can be used, e.g., Google, Bing, OSM but raises questions of data protection and quality concerns.
+
+We rely on a service offered by the Federal Agency of Cartography and Geodesy (BKG):
+
+- Online interface and API for online geocoding
+- Offline geocoding possible based on raw data
+- But: Data and service are restricted
+
+---
+
+## `bkggeocoder`
+
+.pull-left[
+
+R package `bkggeocoder` developed at GESIS for (offline) geocoding by Stefan and Jonas Lieth:
+
+- Access via [Github](https://github.com/StefanJuenger/bkggeocoder)
+- Introduction in the [Meet the Experts Talk](https://www.youtube.com/watch?v=ZnA21LyKK88&feature=youtu.be) by Stefan
+
+]
+
+.pull-right[
+</br>
+</br>
+```{r pic-bkggeocoding, out.width = "65%", echo = FALSE}
+woRkshoptools::include_picture("bkggeocoder.png")
+```
+]
+
+---
+
+
 ## Spatial Linking
 
-```{r pic-spatial-linking, echo = FALSE, out.width = "45%"}
+.pull-left[
+Geocoding tool retrieves automatically point coordinates, administrative unit keys and INSPIRE* grid cell ids.
+
+Spatial joins based on coordinates for other units:
+
+- constituencies
+- administrative units across time (e.g., harmonized territorial status)
+
+]
+
+.pull-right[
+
+```{r pic-spatial-linking, echo = FALSE, out.width = "80%"}
 woRkshoptools::include_picture("fig_3d_.png") 
 ```
 
 .tinyisher[Sources:  OpenStreetMap / GEOFABRIK (2018), City of Cologne (2014), Leibniz Institute of Ecological Urban and Regional Development (2018), Statistical Offices of the Federation and the Länder (2016), and German Environmental Agency / EIONET Central Data Repository (2016) / Jünger, 2019]
+]
+---
+
+## Data Linking
+
+Linking via ids most commonly used but comes with its own challenges (e.g., territorial status and land reforms? comparable units? heterogeneity within units?).
+
+```{r pic-data-linking, echo = FALSE, out.width = "75%"}
+woRkshoptools::include_picture("data_linking.png") 
+```
 
 ---
 
@@ -215,6 +229,7 @@ woRkshoptools::include_picture("fig_3d_.png")
 .pull-left[
 
 1:1
+.tinyisher[sf::st_join]
 
 ```{r pic-noise-by-location, echo = FALSE, out.width = "75%"}
 woRkshoptools::include_picture("fig_linking_by_location_noise.png")
@@ -224,6 +239,7 @@ woRkshoptools::include_picture("fig_linking_by_location_noise.png")
 .pull-right[
 
 Distances
+.tinyisher[sf::st_distance]
 
 ```{r pic-noise-distance, echo = FALSE, out.width = "75%"}
 woRkshoptools::include_picture("fig_linking_distance_noise_appI.png")
@@ -239,6 +255,7 @@ woRkshoptools::include_picture("fig_linking_distance_noise_appI.png")
 .pull-left[
 
 Filter methods
+.tinyisher[sf::st_filter or terra::vect(. , filter = )]
 
 ```{r pic-immigrants-filter, echo = FALSE, out.width = "75%"}
 woRkshoptools::include_picture("fig_linking_focal_immigrants.png")
@@ -249,6 +266,7 @@ woRkshoptools::include_picture("fig_linking_focal_immigrants.png")
 .pull-right[
 
 Buffer zones
+.tinyisher[sf::st_buffer (combined with terra::vect())]
 
 ```{r pic-selaing-buffer, echo = FALSE, out.width = "75%"}
 woRkshoptools::include_picture("fig_linking_buffer_sealing.png")
@@ -259,91 +277,12 @@ woRkshoptools::include_picture("fig_linking_buffer_sealing.png")
 
 ---
 
-## Environmental inequalities (Jünger, 2021)
-
-> Is income associated with fewer environmental disadvantages, and are there differences between German people and people with a migration background?
-
-.pull-left[
-.small[
-Theoretical Framework
-- Social and Ethnic Inequalities (Crowder & Downey, 2010)
-- Place Stratification (Lersch, 2013)
-
-Data
-- GGSS 2016 & 2018
-- soil sealing & green spaces
-]
-]
-
-.pull-right[
-```{r pic-linking-appIII, echo = FALSE, out.width = "65%"}
-woRkshoptools::include_picture("fig_linking_buffer_sealing.png")
-```
-
-.tinyisher[Leibniz Institute of Ecological Urban and Regional Development (2018) / Jünger, 2019]
-]
-
-
----
-
-## Results
-
-```{r pic-soil-sealing-estimates, echo = FALSE, out.width = "70%"}
-woRkshoptools::include_picture("FIGURE_2.png")
-```
-
-.tinyisher[Data source: GGSS 2016 & 2018; N = 6,117; 95% confidence intervals based on cluster-robust standard errors (sample point); all models control for age, gender, education, household size, german region and survey year interaction, inhabitant size of the municipality, and distance to municipality administration]
-
----
-
-## Attitudes towards minorities (Jünger & Schaeffer, 2022)
-
-> Do people who live in ethnic homogenous neighborhoods that are close to ethnic diverse ones have more negative attitudes towards minorities?
-
-.pull-left[
-.small[
-Theoretical Framework
-- Contact Theory (Allport, 1954)
-- Ethnic Competition (Stephan et al., 2009)
-
-Data
-- GGSS 2016
-- German Census 2011
-]
-]
-
-.pull-right[
-```{r halo-ii, echo = FALSE, out.width = "65%"}
-woRkshoptools::include_picture("Abb1.png")
-```
-
-.tinyisher[German Census 2011, OpenStreetMap / Jünger & Schaeffer, 2022]
-]
-
----
-
-## Results
-
-```{r halo-ii-2, echo = FALSE, out.width = "70%"}
-woRkshoptools::include_picture("Abb2.png")
-```
-
-.tinyisher[Data source: GGSS 2016; N = 1,689; 95% confidence intervals based on cluster-robust standard errors (sample point); all models control for age, gender, education, income, unemployment, homeownership, immigrants and inhabitants in the neighborhood, inhabitant size of the municipality, german region]
-
----
-
-class: middle
-
-## Addon-slides: Simulated case study
-
----
-
 ## Fake Research Question
 
 .pull-left[
 Say we're interested in the impact of the current pandemic on individual well-being in the geographic context.
 
-We plan to conduct a survey in the state of North-Rhine Westphalia and Baden Wurttemberg.
+We plan to conduct a survey in the state of North-Rhine Westphalia.
 ]
 
 .pull-right[
@@ -357,7 +296,7 @@ woRkshoptools::include_picture("4iq3kg.jpg")
 
 ---
 
-## Our Sample Area: NRW's and BW's Boundaries
+## Our Sample Area: NRW's Boundaries
 
 .pull-left[
 ```{r get-nrw}
@@ -369,19 +308,6 @@ nrw <-
   .$multipolygon %>% 
   sf::st_transform(3035) 
 
-bw <-
-  osmdata::getbb(
-    "Baden-Württemberg", 
-    format_out = "sf_polygon"
-  ) %>% 
-  .$multipolygon %>% 
-  sf::st_transform(3035)
-
-sampling_area <- 
-  dplyr::bind_rows(
-    nrw %>% dplyr::mutate(state = "nrw"), 
-    bw %>% dplyr::mutate(state = "bw")
-  )
 ```
 ]
 
@@ -497,53 +423,37 @@ fake_survey_data
 ## What could explain our Fake Corona Burden Score?
 
 *Likelihood to meet people*
-> 1) The lower the district's population density, the lower the Fake Corona Burden Score.
+> Higher district's population density, lower Fake Corona Burden Score.
 
 --
 
-*District relatively high affected by Covid-19*
-> 2) If the Corona deaths in the district is higher than in the state, the lower the Fake Corona Burden Score.
-
----
-
-## What could explain our Fake Corona Burden Score?
-
 *Provision of health services*
-> 3) The closer the next hospital to the respondent, the lower the Fake Corona Burden Score.
+> Higher distance to closest hospital,  higher  Fake Corona Burden Score.
 
 --
 
 *Possible language issues in health care communication*
-> 3) The higher the immigrant rate in the neighborhood, the higher the Fake Corona Burden Score.
-
----
-
-## Variable Overview
-
-Good Thing: We have all the data to calculate these indicators, even though we need first to transform some of the variables.
-
-  1. Calculate the variables at the district and state levels.
-  2. Link the district and state-level data with the fake survey respondents.
-  3. Calculate the hospital distance and immigrant rate.
-
-```{r overview-table, echo = FALSE, out.width = "90%"}
-woRkshoptools::include_picture("overview_table.png")
-```
+> Higher immigrant rate in the neighborhood, higher Fake Corona Burden Score.
 
 ---
 
 ## Population Density
 
-When all data sets are loaded, we can calculate the districts' area for the population density. 
-
-<small><small>Remember: We reduced our sample to North Rhine Westphalia and dropped some variables.</small></small>
+When all data sets are loaded, we reduced our sample to the area North Rhine Westphalia.
 
 ```{r load-data-hidden, echo = F, warning = F, message = F}
+
 sampling_area_districts <-
   sf::read_sf("./data/VG250_KRS.shp") %>% 
   sf::st_transform(3035) %>% 
-  sf::st_join(sampling_area, join = sf::st_intersects, left = FALSE) %>% 
-  dplyr::transmute(district_id = AGS, state)
+  # reduce to area of nrw: x lies within y
+  sf::st_join(.,
+              sampling_area, 
+              join = sf::st_intersects, 
+              left = FALSE) %>% 
+  # select and rename columns
+  dplyr::rename(district_id = AGS) %>% 
+  dplyr::select(district_id)
 
 attributes_districts <- readr::read_csv("./data/attributes_districts.csv")
  
@@ -562,21 +472,45 @@ sampling_area_hospitals <-
       dplyr::select(geometry),
     join = st_within
   )
+
 ```
 
-.smaller[
+
+```{r prep_data, eval = F}
+
+# reduce sample
+sampling_area_districts_enhanced <-
+  # load shapefile
+  sf::read_sf("./data/VG250_KRS.shp") %>% 
+  # adjust crs
+  sf::st_transform(3035) %>% 
+  # add attributes
+  dplyr::left_join(attributes_districts, by = "district_id" ) %>% 
+  # reduce to area of nrw: x lies within y
+  sf::st_join(.,
+              sampling_area, 
+              join = sf::st_intersects, 
+              left = FALSE) %>% 
+  # select and rename columns
+  dplyr::rename(district_id = AGS) %>% 
+  dplyr::select(district_id)
+
+
+```
+
+---
+
+## Calculate size of the area
+
 ```{r area-calc}
+
 # calculate area of districts
+# areas will always be calculated
+# in units according to the CRS 
 sf::st_area(sampling_area_districts_enhanced) %>% 
   head(4)
 
-# areas will always be calculated
-# in units according to the CRS 
-sampling_area_districts_enhanced %>% 
-  dplyr::mutate(area = sf::st_area(.)) %>% 
-  dplyr::select(area)
 ```
-]
 
 
 ---
@@ -589,7 +523,8 @@ All left to do is a simple mutation. Let's pipe it!
 # calculation population density
 sampling_area_districts_enhanced <-
   sampling_area_districts_enhanced %>% 
-  # calculate area 
+  # calculate area of districts (areas will always
+  # be calculatednin units according to the CRS )
   dplyr::mutate(area = sf::st_area(.)) %>% 
   # change unit to square kilometers
   dplyr::mutate(area_km2 = units::set_units
@@ -627,145 +562,17 @@ tm_shape(sampling_area_districts_enhanced) +
 
 ---
 
-## Aggregate Covid-19 Deaths
-
-In order to calculate the number of Covid-19 deaths on the state level, we need to aggregate these numbers.
-
-.pull-left[
-```{r head-distr}
-# check data sets
-sampling_area_districts_enhanced
-```
-]
-
---
-
-.pull-right[
-```{r head-state}
-# check data sets
-sampling_area
-```
-]
-
----
-
-## Calculate Districts Within States
-
-We rely here on the `sf` feature `st_join()` and the `dplyr` functions `group by()`and `summarize()`. First step is a join of two sf objects.
-You always join based on the first-named object (x lying within which y?). 
-
-```{r st-join}
-# step one: district in
-sf::st_join(sampling_area_districts_enhanced, sampling_area, join = st_within) %>% 
-  head(.,2)
-```
-
----
-
-## A Word on Spatial Relations
-
-Every time we want to use a spatial join, meaning matching two spatial objects based on their geometric relation, we need to think about the type of relation we assume.
-`st_join` asks us to define the "join" type (default is intersect).
-
-```{r spatial_relations, echo = FALSE, out.width = "90%"}
-woRkshoptools::include_picture("spatial_relations.png")
-```
-.center[
-<small><small>https://www.e-education.psu.edu/maps/l2_p5.html</small></small>
-]
-
----
-
-## Group and Sum on State-Level
-
-Back to our spatial join. After joining the information in which state each district lies (surprise: North Rhine Westphalia!), we can summarize the number of Covid-19 cases by grouping them on the state level.
-
-```{r join-group}
-# second step: group & sum
-sf::st_join(
-  sampling_area_districts_enhanced, 
-  sampling_area %>% dplyr::select(-state), 
-  join = st_within) %>%
-  dplyr::group_by(state) %>% 
-  dplyr::summarize(death_rate_state = 
-              mean(death_rate)) %>% 
-  head(.,2)
-```
-
----
-
-# Final Steps
-
-In the last step, we drop the geometries, re-join our variable back to the state data frame and calculate our aggregated Covid death rates. And - voilà - a simple function will give us our district differences. 
-
-.pull-left[
-```{r incidence-disp, eval = F }
-# the 'dplyr way' in completion
-sampling_area_districts_enhanced <-
-  sf::st_join(
-    sampling_area_districts_enhanced,
-    sampling_area %>% dplyr::select(-state), 
-    join = st_within
-  ) %>%
-  dplyr::group_by(state) %>% 
-  dplyr::summarize(
-    death_rate_state = mean(death_rate)
-  ) %>% 
-  # already have geometries, so drop them
-  sf::st_drop_geometry() %>% 
-  # simple left_join
-  dplyr::left_join(sampling_area_districts_enhanced, ., by = "state")
-
-# calculate the difference between 
-# state and district
-sampling_area_districts_enhanced <-
-  sampling_area_districts_enhanced %>% 
-  mutate(death_diffs = death_rate - death_rate_state) 
-```
-]
-
-.pull-right[
-```{r incidence, echo = F, warning = F, message = F}
-# the 'dplyr way' in completion
-sampling_area_districts_enhanced <-
-  sf::st_join(
-    sampling_area_districts_enhanced,
-    sampling_area %>% dplyr::select(-state), 
-    join = st_within
-  ) %>%
-  dplyr::group_by(state) %>% 
-  dplyr::summarize(
-    death_rate_state = mean(death_rate)
-  ) %>% 
-  # already have geometries, so drop them
-  sf::st_drop_geometry() %>% 
-  # simple left_join
-  dplyr::left_join(sampling_area_districts_enhanced, ., by = "state")
-
-# calculate the difference between 
-# state and district
-sampling_area_districts_enhanced <-
-  sampling_area_districts_enhanced %>% 
-  mutate(death_diffs = death_rate - death_rate_state) 
-
-tm_shape(sampling_area_districts_enhanced) + 
-  tm_fill("death_diffs", midpoint = NA, palette = "viridis")
-```
-
-]
-
----
-
 ## Respondents in Districts
 
-We have population density and the difference in 7-day incidences on the district level. Since our analysis focuses on the individual-level, we can spatial join the information to our fake respondents' coordinates.
+We have population density on the district level. Since our analysis focuses on the individual-level, we can spatial join the information to our fake respondents' coordinates.
 
 ```{r join-disp}
+
 # join back
 spatial_information <-
   sampling_area_districts_enhanced %>%
   # keeping just the variables we want
-  dplyr::select(district_id, pop_dens, death_diffs) %>% 
+  dplyr::select(district_id, pop_dens) %>% 
   # since we want to join district to
   # respondent defining coordintes first
   sf::st_join(fake_coordinates,
@@ -773,9 +580,10 @@ spatial_information <-
           . ,
     # some points may lie on the border
     # choosing intersects therefore
-          join = st_intersects) %>% 
+          join = sf::st_intersects) %>% 
   # drop our coordinates for data protection
-  sf::st_drop_geometry() 
+  sf::st_drop_geometry()
+
 ```
 
 ---
@@ -788,25 +596,9 @@ head(spatial_information, 5)
 
 ---
 
-## Distance to Closest Hospital
-
-.pull-left[
-We're getting a little bit more advanced here. Not in the means of spatial relations or calculations, but concerning data wrangling in general.
-We got our survey respondents and already matched the population density and the difference of Corona incidences between state and district level.
-We want to calculate the straight line distance between them and the closest hospital for each of our fake respondents.
-]
-
-.pull-right[
-```{r pic-distance, echo = FALSE, out.width = "65%"}
-woRkshoptools::include_picture("distance.png")
-```
-]
-
----
-
 # Distance Calculation
 
-`sf::st_distance()` will calculate between **all** respondents and **all** hospitals resulting in a matrix with 1,786,000 objects (1,000 respondent * 1,786 hospitals). We can make our lives a little bit easier by treating this matrix as a `tibble` or data frame having 1,000 observations with 1,786 variables.
+`sf::st_distance()` will calculate between **all** respondents and **all** hospitals resulting in a matrix with 1,786,000 objects (1,000 respondent * 1,786 hospitals). We can make our lives a little bit easier by treating this matrix as a `tibble`.
 
 .pull-left[
 ```{r dist_matr-disp, eval = F}
@@ -862,6 +654,8 @@ distance_closest <-
     # & save in variable
     dplyr::mutate(dist_closest_hospital = 
                   (apply(., 1, min))) %>%  
+    # get kilometer instead of meter
+    dplyr::mutate(dist_closest_hospital = dist_closest_hospital/1000 ) %>%
     # select only column 
     # containing smallest distance
     dplyr::select(dist_closest_hospital)
@@ -878,27 +672,25 @@ sf::st_distance(
   dplyr::as_tibble() %>% 
   dplyr::mutate_all(as.numeric) %>% 
   # identify for each row the minimum & save var
-  dplyr::mutate(dist_closest_hospital = (apply(., 1, min))) %>%  
+  dplyr::mutate(dist_closest_hospital = (apply(., 1, min))) %>% 
+  dplyr::mutate(dist_closest_hospital = dist_closest_hospital/1000) %>% 
   # select only column containing smallest distance
   dplyr::select(dist_closest_hospital)
+
 ```
 
 ]
 
 ---
 
-## Get all the information together! 
+## Join to our spatial information!
 
-Again, I prefer to work with kilometers rather than meters.
-And I want to add our new variable to the other spatial information we already prepared.
-Luckily, I know that the spatial information table has the same length and order as the fake coordinates. Otherwise, it would be wise to bind via the original coordinate data frame we used for `sf::st_distance()`.
+I prefer to work with kilometers rather than meters. And I want to add our new variable to the other spatial information we already prepared. Luckily, I know that the spatial information table has the same length and order as the fake coordinates.
 
 .pull-left[
 ```{r dist-resp-disp, eval = F}
 spatial_information <-
   distance_closest %>% 
-  # get kilometer
-  dplyr::mutate(dist_closest_hospital = dist_closest_hospital/1000 ) %>% 
   # bind columns with spatial information
   # only bind with other data set than the
   # original coordinates when you are 100
@@ -919,10 +711,9 @@ spatial_information <-
   dplyr::mutate_all(as.numeric) %>% 
   dplyr::mutate(dist_closest_hospital = (apply(., 1, min))) %>%  
   dplyr::select(dist_closest_hospital) %>% 
-  dplyr::mutate(dist_closest_hospital = dist_closest_hospital/1000) %>% 
   dplyr::bind_cols(spatial_information, .) 
 
-spatial_information
+head(spatial_information,6)
 ```
 ]
 
@@ -933,35 +724,57 @@ spatial_information
 ...and we're not yet done: we still need the immigrant rate in the neighborhood. Let's calculate buffers of 500 meters and add their mean values to our dataset.
 
 
-```{r load-link-data}
+```{r load-link-data, include = FALSE}
 # download data & create rate
+
 immigrants <- 
   z11::z11_get_100m_attribute(STAATSANGE_KURZ_2)
-
 inhabitants <-
   z11::z11_get_100m_attribute(Einwohner) %>% 
   terra::resample(immigrants)
-                              
 immigrant_rate <- immigrants / inhabitants * 100
-
-# set missings
-immigrant_rate[is.na(immigrant_rate)] <- 0
-
+# calculate immigrant rate for 500m buffer
 immigrant_buffers <- 
-  terra::extract(
-    immigrant_rate,
-    terra::vect(fake_coordinates),
-    buffer = 500,
-    fun = mean
+terra::extract(
+  immigrant_rate, 
+  fake_coordinates %>% 
+    sf::st_buffer(500) %>% 
+    terra::vect(), 
+  fun = mean,
+  na.rm = TRUE
   )
-
 # spatially link with buffers on the fly
 spatial_information <-
   spatial_information %>% 
   dplyr::mutate(immigrant_buffers = immigrant_buffers[[2]])
+
 ```
 
+```{r load-link-noeval, eval = FALSE}
 
+# download data & create rate
+immigrants <- 
+  z11::z11_get_100m_attribute(STAATSANGE_KURZ_2)
+inhabitants <-
+  z11::z11_get_100m_attribute(Einwohner) %>% 
+  terra::resample(immigrants)
+immigrant_rate <- immigrants / inhabitants * 100
+# calculate immigrant rate for 500m buffer
+immigrant_buffers <- 
+terra::extract(
+  immigrant_rate, 
+  fake_coordinates %>% 
+    sf::st_buffer(500) %>% 
+    terra::vect(), 
+  fun = mean,
+  na.rm = TRUE
+  )
+# spatially link with buffers on the fly
+spatial_information <-
+  spatial_information %>% 
+  dplyr::mutate(immigrant_buffers = immigrant_buffers[[2]])
+
+```
 
 ```{r save-secret-data, echo = FALSE, include = FALSE}
 saveRDS(spatial_information, "./data/secrect_data.rds")
@@ -999,7 +812,7 @@ fake_survey_data_spatial <-
 ```{r correlation-plot, echo = FALSE, out.width = "75%"}
 fake_survey_data_spatial %>% 
   dplyr::select(
-    fcbs, pop_dens, death_diffs, dist_closest_hospital, immigrant_buffers
+    fcbs, pop_dens, dist_closest_hospital, immigrant_buffers
   ) %>% 
   corrr::correlate() %>% 
   corrr::network_plot(min_cor = .1)
@@ -1009,25 +822,132 @@ fake_survey_data_spatial %>%
 
 ---
 
-## ... and when things get complicated?
+class: middle
+## Exercise 2_2_1 (optional!): Spatial Joins
 
-In these presented examples, things are working out quite well. However, you will experience that sometimes things can get a little more complicated. Challenges like not matching geometries cause problems for simple spatial joins and force you to decide how to crop the information. For example, ZIP codes and electoral districts do not match with the administrative districts in Germany.
+[Exercise](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/2_2_1_Spatial_Joins_OPTIONAL.html)
 
-You might also want to advance your measurements and dive deeper into the measurements like densities, distances to lines or polygons, spatial autocorrelation measurements, and neighborhood matrices. 
-All of this is possible using *R/RStudio*!
+[Solution](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/2_2_1_Spatial_Joins_OPTIONAL.html)
+
 
 ---
 
 class: middle
-## Exercise 2_2_1 (optional!): Spatial Joins
 
-[Exercise](https://stefanjuenger.github.io/gis_socsci_konstanz/exercises/2_2_1_Spatial_Joins_OPTIONAL.html)
+## Addon-slides: Example Studies
 
-[Solution](https://stefanjuenger.github.io/gis_socsci_konstanz/exercises/2_2_1_Spatial_Joins_OPTIONAL.html)
+---
+
+## Environmental inequalities (Jünger, 2021)
+
+> Is income associated with fewer environmental disadvantages, and are there differences between German people and people with a migration background?
+
+.pull-left[
+.small[
+Theoretical Framework
+- Social and Ethnic Inequalities (Crowder & Downey, 2010)
+- Place Stratification (Lersch, 2013)
+
+Data
+- GGSS 2016 & 2018
+- soil sealing & green spaces
+]
+]
+
+.pull-right[
+```{r pic-linking-appIII, echo = FALSE, out.width = "65%"}
+woRkshoptools::include_picture("fig_linking_buffer_sealing.png")
+```
+
+.tinyisher[Leibniz Institute of Ecological Urban and Regional Development (2018) / Jünger, 2019]
+]
 
 
+---
 
-<!-- STOP WITH SLIDES HERE -->
+## Results
+
+```{r pic-soil-sealing-estimates, echo = FALSE, out.width = "70%"}
+woRkshoptools::include_picture("FIGURE_2.png")
+```
+
+.tinyisher[Data source: GGSS 2016 & 2018; N = 6,117; 95% confidence intervals based on cluster-robust standard errors (sample point); all models control for age, gender, education, household size, german region and survey year interaction, inhabitant size of the municipality, and distance to municipality administration]
+
+---
+
+## Attitudes towards minorities (Jünger & Schaeffer, 2022)
+
+> Do people who live in ethnic homogenous neighborhoods that are close to ethnic diverse ones have more negative attitudes towards minorities?
+
+.pull-left[
+.small[
+Theoretical Framework
+- Contact Theory (Allport, 1954)
+- Ethnic Competition (Stephan et al., 2009)
+
+Data
+- GGSS 2016
+- German Census 2011
+]
+]
+
+.pull-right[
+```{r halo-ii, echo = FALSE, out.width = "65%"}
+woRkshoptools::include_picture("Abb1.png")
+```
+
+.tinyisher[German Census 2011, OpenStreetMap / Jünger & Schaeffer, 2022]
+]
+
+---
+
+## Results
+
+```{r halo-ii-2, echo = FALSE, out.width = "70%"}
+woRkshoptools::include_picture("Abb2.png")
+```
+
+.tinyisher[Data source: GGSS 2016; N = 1,689; 95% confidence intervals based on cluster-robust standard errors (sample point); all models control for age, gender, education, income, unemployment, homeownership, immigrants and inhabitants in the neighborhood, inhabitant size of the municipality, german region]
+
+---
+
+## Left Behind by the State? (Stroppe, Forthcoming)
+
+> Are political trust levels affected by the accessibility of public services and infrastructures for citizens?
+
+.pull-left[
+.small[
+Theoretical Framework
+- Political Performance-Trust Link (Easton 1965, Hetherington 2005)
+- Context condition low-intensity information cue (Cho & Rudolph 2008)
+
+Data
+- GGSS 2018
+- hospital, school, train station (distance measures)
+- municipality data
+]
+]
+
+.pull-right[
+<br>
+```{r pic-provision, echo = FALSE, out.width = "65%"}
+woRkshoptools::include_picture("meandist_trains.png")
+```
+
+.tinyisher[Federal Statistical Office 2019, Deutsche Bahn 2017 and GeoBasis-DE / BKG 2022 / Stroppe, 2023]
+]
+
+
+---
+
+## Results
+
+<br>
+```{r pic-coefplotfig1, echo = FALSE, out.width = "95%"}
+woRkshoptools::include_picture("fig1_coefplot_colored.png")
+```
+
+.tinyisher[Data source: GGSS 2018 and Federal Statistical Office 2017. N = 3030,  Groups = 152 (Municipalities). Fitted Models: OLS multi-level random effect models. Individual-level controls: income, gender, education, age, personal trust, political interest. Municipality level controls: population density and unemployment. Dependent variable: Trust in government. Survey weights are applied.]
 
 ---
 
