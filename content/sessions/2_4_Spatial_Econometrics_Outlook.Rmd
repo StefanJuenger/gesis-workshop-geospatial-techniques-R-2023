@@ -5,7 +5,7 @@ author: "Stefan Jünger & Anne-Kathrin Stroppe"
 date: June 07, 2022
 institute: |
   GESIS Workshop
-presenter: Stefan
+presenter: Anne
 editor_options: 
   chunk_output_type: console
 ---
@@ -27,12 +27,13 @@ course_content %>%
 
 ## What are spatial econometrics?
 
-Econometrics could be reduced to simple statistics... 
-- yet, it has a clearer connection to (economic) theory
-  - this is also why it is interesting for causal inference and thinking
+Econometrics could be reduced to using statistics to model (complex) theories ... 
+- it is interesting for causal inference and thinking
+- as default we think about regression analysis
   
 Therefore, spatial econometrics combine spatial analysis and econometrics
 - study of why spatial relationships (i.e., autocorrelation) exist
+- how spatial autocorrelation affects our outcome of interest
 
 **What is the data generation process?**
 
@@ -46,14 +47,19 @@ There are at least two common mechanisms we are interested in spatial econometri
 **Diffusion**
 - $y_i$ affects $y_j$ through $w_{ij}$
 - $y_j$ affects $y_i$ through $w_{ji}$
-- that's a feedback effect
+- that's a feedback effect 
   - endogenous by design!
+- Examples:
+  - pandemic and policy measures to contain the pandemic
+  - diffusion of violence in a war
 ]
 
 .pull-right[
 **Spillover**
 - $x_i$ affects $y_j$ through $w_{ij}$
 - $x_j$ affects $y_i$ through $w_{ij}$
+- Examples:
+  - spillover of economic strength and trade 
 ]
 
 ---
@@ -94,19 +100,19 @@ $$Y = X\beta + \epsilon$$
 
 --
 
-Spatial Lag Y / Spatial Autoregressive Model:
+Spatial Lag Y / Spatial Autoregressive Model (SAR, Diffusion):
 
 $$Y = \rho WY + X\beta + \epsilon$$
 
 --
 
-Spatial Lag X Model:
+Spatial Lag X Model (SLX, Spillover):
 
 $$Y = X\beta + WX\theta + \epsilon$$
 
 --
 
-Spatial Error Model: 
+Spatial Error Model (SEM): 
 
 $$Y = X\beta + u$$
 $$u = \lambda Wu + \epsilon$$
