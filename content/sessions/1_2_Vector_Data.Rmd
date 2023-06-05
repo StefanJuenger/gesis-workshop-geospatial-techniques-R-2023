@@ -333,9 +333,9 @@ sf::st_drop_geometry(german_states) %>%
 class: middle
 ## Exercise 1_2_1: Import Vector Data 
 
-[Exercise](https://stefanjuenger.github.io/gis_socsci_konstanz/exercises/1_2_1_Import_Vector_Data.html)
+[Exercise](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/1_2_1_Import_Vector_Data.html)
 
-[Solution](https://stefanjuenger.github.io/gis_socsci_konstanz/solutions/1_2_1_Import_Vector_Data.html)
+[Solution](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/solutions/1_2_1_Import_Vector_Data.html)
 
 ---
 
@@ -546,9 +546,9 @@ sf::st_write(
 class: middle
 ## Exercise 1_2_2: Manipulate Vector Data 
 
-[Exercise](https://stefanjuenger.github.io/gis_socsci_konstanz/exercises/1_2_2_Manipulate_Vector_Data.html)
+[Exercise](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/1_2_2_Manipulate_Vector_Data.html)
 
-[Solution](https://stefanjuenger.github.io/gis_socsci_konstanz/solutions/1_2_2_Manipulate_Vector_Data.html)
+[Solution](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/solutions/1_2_2_Manipulate_Vector_Data.html)
 
 ---
 
@@ -578,13 +578,16 @@ attributes_districts <- readr::read_csv("./data/attributes_districts.csv")
 # Join data and transform
 german_districts_enhanced <- 
   german_districts %>% 
+  sf::st_transform(3035) %>% 
   dplyr::left_join(attributes_districts, by = "district_id") %>% 
-  sf::st_transform(3035)
+  dplyr::mutate(covid_deaths_pop = (death_rate / population) * 100000)
+
 
 # filter Mannheim
 mannheim <-
   german_districts_enhanced %>% 
   dplyr::filter(district_id == "08222")
+
 
 # filter surrounding districts, append with Mannheim data and select the Covid column
 mannheim_sur <-

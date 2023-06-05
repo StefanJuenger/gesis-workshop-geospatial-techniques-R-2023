@@ -23,7 +23,7 @@ klippy::klippy()
 
 
 ```{block, box.title = "1", box.body = list(fill = "white"), box.icon = "fa-star"}
-In the addon of the session, we calculated the distances to the closest hospitals located within North-Rhine Westphalia (NRW) and Baden Wurttemberg (BW). Still, we did not show how to subset the original file, which contains all hospitals in Germany.
+In the addon of the session, we calculated the distances to the closest hospitals located within North-Rhine Westphalia (NRW). Still, we did not show how to subset the original file, which contains all hospitals in Germany.
 
 Subset the data file yourself by relying on the spatial information of the file `hospital_points.csv` and a polygon of NRW only.
 How many hospitals are located within the borders of NRW?
@@ -34,6 +34,7 @@ You need two datasets for that: the point layer `hospital_points.csv` in the `./
 ```
 
 ```{block, opts.label = "clues"}
+
 The default of `sf::st_join()` will leave you with a 'left-join' and returns a data object with all hospitals and matching district information for those which are located within NRW. You can reset the option to perform an 'inner-join' and keep only the observation which lay within the predefined area (`sf::st_join(x , y, join  = "", left = FALSE)`).
 
 ```
@@ -79,11 +80,10 @@ nrw_hospitals
 
 
 ```{block, box.title = "2", box.body = list(fill = "white"), box.icon = "fa-star"}
-Did the operationalization of health care provision convince you? Don't you think it might be more important how many hospitals are close to survey respondents?
-To test this, we want to calculate the number of hospitals per district in North-Rhine Westphalia.
-Use the syntax below to prep the hospital data.
 
-Earn extra points by counting not only the number of hospitals but also the sum of hospital beds within a district.
+Did the operationalization of health care provision convince you? Don't you think it might be more important how many hospitals are close to survey respondents?
+To test this, we want to calculate the number of hospitals (and/or hospital beds) per district in North-Rhine Westphalia.
+
 ```
 
 ```{block, opts.label = "clues"}
@@ -95,6 +95,7 @@ The function `dplyr::n()` allows summarizing the total count of hospitals. `sum(
 ```
 
 ```{r second, solution = TRUE}
+
 nrw_districts <- 
   sf::read_sf("./data/VG250_KRS.shp") %>% 
   sf::st_transform(3035) %>% 
