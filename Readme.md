@@ -52,11 +52,11 @@ This course will teach its participants how to exploit R to apply its geospatial
 
 [2_1_2 Wrangling the German Census](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/2_1_2_Wrangling_the_German_Census.html)
 
-[2_2_1 Spatial Joins (optional!)](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/2_2_1_Spatial_Joins.html)
+[2_2_1 Spatial Joins](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/2_2_1_Spatial_Joins.html)
 
 [3_1_1 Neighborhood Matrices](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/3_1_1_Neighborhood_Matrices.html)
 
-[2_3_2: Spatial Regression](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/2_3_2_Spatial_Regression.html)
+[2_4_1: Spatial Regression](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/2_4_1_Spatial_Regression.html)
 
 ## Solutions
 [1_1_1 Package Installation](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/solutions/1_1_1_Package_Installation.html)
@@ -77,9 +77,9 @@ This course will teach its participants how to exploit R to apply its geospatial
 
 [2_1_2 Wrangling the German Census](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/solutions/2_1_2_Wrangling_the_German_Census.html)
 
-[2_2_1 Spatial Joins (optional!)](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/solutions/2_2_1_Spatial_Joins.html)
+[2_2_1 Spatial Joins](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/solutions/2_2_1_Spatial_Joins.html)
 
 [3_1_1 Neighborhood Matrices](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/solutions/3_1_1_Neighborhood_Matrices.html)
 
-[2_3_2: Spatial Regression](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/solutions/2_3_2_Spatial_Regression.html)
+[2_4_1: Spatial Regression](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/solutions/2_4_1_Spatial_Regression.html)
 
