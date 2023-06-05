@@ -6,8 +6,7 @@
 
 Materials for the GESIS workshop "Introduction to Geospatial Techniques for Social Scientists in R" 
 
-[Stefan Jünger](https://stefanjuenger.github.io) (stefan.juenger@gesis.org)
-[Anne-Kathrin Stroppe](stefan.juenger@gesis.org) (stefan.juenger@gesis.org)
+[Stefan Jünger](https://stefanjuenger.github.io) (stefan.juenger@gesis.org) & [Anne-Kathrin Stroppe](stefan.juenger@gesis.org) (stefan.juenger@gesis.org)
 
 ## Workshop Description
 In recent years, many researchers have renewed interest in the spatially integrated social sciences, following the call of a 'spatial turn' among plenty of its subdisciplines. However, to process, visualize, and analyze geospatial data, social scientists must first be trained in specialized tools called Geographic Information Systems (GIS). The good news is: While this may have been an unacquainted undertaking until recently, the familiar open-source statistical language R can now serve as a full-blown GIS for many research applications.
