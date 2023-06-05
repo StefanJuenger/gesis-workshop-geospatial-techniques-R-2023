@@ -44,6 +44,7 @@ Therefore, spatial econometrics combine spatial analysis and econometrics
 There are at least two common mechanisms we are interested in spatial econometrics
 
 .pull-left[
+.small[
 **Diffusion**
 - $y_i$ affects $y_j$ through $w_{ij}$
 - $y_j$ affects $y_i$ through $w_{ji}$
@@ -53,13 +54,16 @@ There are at least two common mechanisms we are interested in spatial econometri
   - pandemic and policy measures to contain the pandemic
   - diffusion of violence in a war
 ]
+]
 
 .pull-right[
+.small[
 **Spillover**
 - $x_i$ affects $y_j$ through $w_{ij}$
 - $x_j$ affects $y_i$ through $w_{ij}$
 - Examples:
   - spillover of economic strength and trade 
+]
 ]
 
 ---
@@ -121,37 +125,42 @@ $$u = \lambda Wu + \epsilon$$
 
 ## Flavors and extensions
 
-.small[
+.tinyisher[
 Spatial Durbin Model:
 
 $$Y = \rho WY + X\beta + WX\theta + \epsilon $$
 ]
 
---
-
-.small[
+.tinyisher[
 Spatial Durbin Error Model:
 
 $$Y = X\beta + WX\theta + u$$
 $$u = \lambda Wu + \epsilon$$
 ]
 
---
-
-.small[
+.tinyisher[
 Combined Spatial Autocorrelation Model:
 
 $$Y = \rho WY + X\beta + u$$
 $$u = \lambda Wu + \epsilon$$
 ]
 
---
-
-.small[
+.tinyisher[
 Manski Model:
 
 $$Y = \rho WY + WX\theta + X\beta + u$$
 $$u = \lambda Wu + \epsilon$$
+]
+
+
+
+.center[
+```{r pic-formulas, echo = F, out.width="40%"}
+woRkshoptools::include_picture("formulas.gif")
+```
+.tinyisher[
+Source:[Tenor](https://tenor.com/de/view/formulas-hangover-gif-4841358)
+]
 ]
 
 ---
@@ -160,7 +169,7 @@ $$u = \lambda Wu + \epsilon$$
 
 There are a lot of models you could estimate to *explain* spatial autocorrelation. And there's a vast body of literature on what's the best choice for which application. 
 
-I'd explicitly like to recommend you the work of [Tobias Rüttenauer](https://ruettenauer.github.io/publication/) for us social scientists. [Here](https://ruettenauer.github.io/SICSS-Spatial/index.html) are some really nice workshop materials.
+We'd explicitly like to recommend you the work of [Tobias Rüttenauer](https://ruettenauer.github.io/publication/) for us social scientists. [Here](https://ruettenauer.github.io/SICSS-Spatial/index.html) are some really nice workshop materials.
 
 
 **In this session, we will only estimate Spatial Lag Y and X and Spatial Error Models.**
@@ -169,7 +178,7 @@ I'd explicitly like to recommend you the work of [Tobias Rüttenauer](https://ru
 
 ## 'Research' question and data
 
-We will use the same example as in the previous session. But this time we will actually test if one of our spatal regression models helps in investigating the data generation process any further. We may ask:
+We will use the same example as in the previous session. But this time we will actually test if one of our spatial regression models helps in investigating the data generation process any further. We may ask:
 
 1. Do immigrant shares have an effect on AfD voting shares within voting districts?
 2. Do immigrant shares have an effect on AfD voting shares between neighborhoods? (=spillover)
@@ -177,23 +186,11 @@ We will use the same example as in the previous session. But this time we will a
 
 It might also be a good idea to control for inhabitant numbers within the voting districts.
 
-```{r compile-data, echo = FALSE}
+```{r compile-data, include=FALSE}
+
 voting_districts <-
-  glue::glue(
-    "https://geoportal.stadt-koeln.de/arcgis/rest/services/Basiskarten/kgg/\\
-    MapServer/20/query?where=objectid+is+not+null&text=&objectIds=&time=&\\
-    geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=\\
-    esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&\\
-    outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=\\
-    &geometryPrecision=&outSR=4326&havingClause=&returnIdsOnly=false&return\\
-    CountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=\\
-    &returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinct\\
-    Values=false&resultOffset=&resultRecordCount=&returnExtentOnly=false&datum\\
-    Transformation=&parameterValues=&rangeValues=&quantizationParameters=&\\
-    featureEncoding=esriDefault&f=geojson"
-  ) %>% 
-  sf::st_read(as_tibble = TRUE) %>%
-  sf::st_transform(3035) %>% 
+  sf::st_read("./data/Stimmbezirk.shp") %>%
+  sf::st_transform(3035)  %>% 
   dplyr::transmute(Stimmbezirk = as.numeric(nummer))
 
 afd_votes <-
@@ -332,7 +329,7 @@ Unfortunately, in case of a Spatial Lag Y Model the spatial parameter $\rho$ onl
   - what a mess
   
 Luckily, there's a method to decompose the spatial effects into direct, indirect and total effects: **estimating impacts**
-- it's also helpful for Spatial Lag X Models
+
 
 ---
 
@@ -379,11 +376,240 @@ class: middle
 
 ## Exercise 2_3_2: Spatial Regression
 
-[Exercise](https://stefanjuenger.github.io/gis_socsci_konstanz/exercises/2_3_2_Spatial_Regression.html)
+[Exercise](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/2_4_1_Spatial_Regression.html)
 
-[Solution](https://stefanjuenger.github.io/gis_socsci_konstanz/solutions/2_3_2_Spatial_Regression.html)
+[Solution](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/solutions/2_4_1_Spatial_Regression.html)
 
 ---
+
+class: middle
+
+## Outlook
+
+---
+
+## This week
+
+```{r this-week, echo = FALSE}
+course_content
+```
+
+---
+
+## Introduction
+
+```{r course-content-1, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(1, background = "yellow")
+```
+
+---
+
+## Introduction
+
+Main Messages
+- Geospatial data are relevant in the social sciences
+  - already for a long time
+- `R` can serve as a full-blown Geographic Information System (GIS)
+
+---
+
+## Vector Data
+
+```{r course-content-2, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(2, background = "yellow")
+```
+
+---
+
+## Vector Data
+
+Main Messages
+- Most common geospatial data type
+- Vector data come as points, lines or polygons 
+- Information on the geometries stored in the geometry column
+- Attributes can be assigned to each geometric object
+- Attribute tables are treated as data frames
+
+---
+
+## Mapping
+
+```{r course-content-3, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(4, background = "yellow")
+```
+
+---
+
+## Mapping
+
+Main Messages
+- basis of each map is the geometries of geospatial data
+- spatial distribution of attributes become visible when  defining an attribute and adding color scales
+- layer shapefiles to add more information or for aesthetic reasons
+
+---
+
+## Raster Data
+
+```{r course-content-4, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(5, background = "yellow")
+```
+
+---
+
+## Raster Data
+
+Main Messages
+- Data format for efficient and fast analysis of geospatial data
+- flexible in their application
+- can get rather involved
+- however, straightforward extraction of values
+
+---
+
+## Advanced Data Import
+
+```{r course-content-5, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(6, background = "yellow")
+```
+
+---
+
+## Advanced Data Import
+
+Main Messages
+- Geospatial data tend to be large
+- Often distributed over the internet
+- APIs help in downloading these data
+- can get pretty involved
+
+---
+
+## Applied Data Wrangling
+
+```{r course-content-6, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(7, background = "yellow")
+```
+
+---
+
+## Applied Data Wrangling
+
+Main Messages
+- Georeferenced survey data require handling sensitive data
+- our example of wrangling and linking data but applications may vary
+- spatial joins are the perfect tool to add geospatial information to other georeferenced data
+
+---
+
+## Investigating Spatial Autocorrelation
+
+```{r course-content-7, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(8, background = "yellow")
+```
+
+---
+
+## Investigating Spatial Autocorrelation
+
+Main Messages
+- spatial autocorrelation is something that must be detected
+- we need a model for that
+  - spatial weight matrices!
+- there are global and local indicators of spatial autocorrelation
+
+---
+
+## Spatial Econometrics
+
+```{r course-content-8, echo = FALSE}
+course_content %>%
+  kableExtra::row_spec(10, background = "yellow")
+```
+
+---
+
+## Spatial Econometrics
+
+Main Messages
+- spatial autocorrelation can also be explained by
+  - diffusion
+  - or spillover effect
+- these effects can be tested but should always be inspected with theory
+
+---
+
+## What's left
+
+.pull-left[
+.small[
+Other map types such as
+- cartograms
+- hexagon maps
+- animated maps
+- (more) network graphs
+
+
+GIS techniques, such as
+- geocoding
+- routing
+- cluster analysis
+
+
+More Advanced Spatial(-temporal) Modeling 
+
+More data sources...
+]
+]
+
+.pull-right[
+```{r gif-kontakt, echo = F, out.width="100%"}
+woRkshoptools::include_picture("kontakt.gif")
+```
+.tinyisher[
+Check out [`gganimate`](https://github.com/thomasp85/gganimate)
+]
+]
+---
+
+## Data Sources
+
+Some more information:
+
+- geospatial data are interdisciplinary
+- amount of data feels unlimited
+- data providers and data portals are often specific in the area and/or the information they cover
+
+--
+
+Some random examples: 
+
+- [Eurostat](https://ec.europa.eu/eurostat/web/gisco/geodata)
+- [European Spatial Data Infrastructure](https://inspire.ec.europa.eu/about-inspire/563)
+- [John Hopkins Corona Data Hub and Dashboard](https://coronavirus.jhu.edu/map.html)
+- [US Census Bureau](https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.html)
+- ...
+
+---
+
+class: middle
+## The End
+
+---
+
+class: middle
+
+## Addon-slides: Missings in Spatial Econometrics
+
+---
+
 
 ## What if you got missing values?
 
@@ -582,216 +808,6 @@ spatial_lag_y_model_missing <-
 spatialreg::impacts(spatial_lag_y_model_missing, listw = queen_W_missing)
 spatialreg::impacts(spatial_lag_y_model, listw = queen_W)
 ```
-
-
-
-
----
-
-class: middle
-
-## Outlook
-
----
-
-## This week
-
-```{r this-week, echo = FALSE}
-course_content
-```
-
----
-
-## Introduction
-
-```{r course-content-1, echo = FALSE}
-course_content %>%
-  kableExtra::row_spec(1, background = "yellow")
-```
-
----
-
-## Introduction
-
-Main Messages
-- Geospatial data are relevant in the social sciences
-  - already for a long time
-- `R` can serve as a full-blown Geographic Information System (GIS)
-
----
-
-## Vector Data
-
-```{r course-content-2, echo = FALSE}
-course_content %>%
-  kableExtra::row_spec(2, background = "yellow")
-```
-
----
-
-## Vector Data
-
-Main Messages
-- Most common geospatial data type
-- Vector data come as points, lines or polygons 
-- Information on the geometries stored in the geometry column
-- Attributes can be assigned to each geometric object
-- Attribute tables are treated as data frames
-
----
-
-## Mapping
-
-```{r course-content-3, echo = FALSE}
-course_content %>%
-  kableExtra::row_spec(4, background = "yellow")
-```
-
----
-
-## Mapping
-
-Main Messages
-- basis of each map is the geometries of geospatial data
-- spatial distribution of attributes become visible when  defining an attribute and adding color scales
-- layer shapefiles to add more information or for aesthetic reasons
-
----
-
-## Raster Data
-
-```{r course-content-4, echo = FALSE}
-course_content %>%
-  kableExtra::row_spec(5, background = "yellow")
-```
-
----
-
-## Raster Data
-
-Main Messages
-- Data format for efficient and fast analysis of geospatial data
-- flexible in their application
-- can get rather involved
-- however, straightforward extraction of values
-
----
-
-## Advanced Data Import
-
-```{r course-content-5, echo = FALSE}
-course_content %>%
-  kableExtra::row_spec(6, background = "yellow")
-```
-
----
-
-## Advanced Data Import
-
-Main Messages
-- Geospatial data tend to be large
-- Often distributed over the internet
-- APIs help in downloading these data
-- can get pretty involved
-
----
-
-## Applied Data Wrangling
-
-```{r course-content-6, echo = FALSE}
-course_content %>%
-  kableExtra::row_spec(7, background = "yellow")
-```
-
----
-
-## Applied Data Wrangling
-
-Main Messages
-- Georeferenced survey data require handling sensitive data
-- our example of wrangling and linking data (applications may vary)
-- spatial joins are the perfect tool to add geospatial information to other georeferenced data
-
----
-
-## Investigating Spatial Autocorrelation
-
-```{r course-content-7, echo = FALSE}
-course_content %>%
-  kableExtra::row_spec(8, background = "yellow")
-```
-
----
-
-## Investigating Spatial Autocorrelation
-
-Main Messages
-- spatial autocorrelation is something that must be detected
-- we need a model for that
-  - spatial weight matrices!
-- there are global and local indicators of spatial autocorrelation
-
----
-
-## Spatial Econometrics
-
-```{r course-content-8, echo = FALSE}
-course_content %>%
-  kableExtra::row_spec(10, background = "yellow")
-```
-
----
-
-## Spatial Econometrics
-
-Main Messages
-- spatial autocorrelation ca also be explained by
-  - diffusion
-  - or spillover effect
-- these effects can be tested but should always be inspected with theory
-- be careful when there are missing data
-
----
-
-## What's left
-
-Other map types such as
-- cartograms
-- hexagon maps
-- animated maps
-- (more) network graphs
-
---
-
-GIS techniques, such as
-- geocoding
-- routing
-- cluster analysis
-
---
-
-More data sources...
-
-  
----
-
-## Data Sources
-
-Some more information:
-
-- geospatial data are interdisciplinary
-- amount of data feels unlimited
-- data providers and data portals are often specific in the area and/or the information they cover
-
---
-
-Some random examples: 
-
-- [Eurostat](https://ec.europa.eu/eurostat/web/gisco/geodata)
-- [European Spatial Data Infrastructure](https://inspire.ec.europa.eu/about-inspire/563)
-- [John Hopkins Corona Data Hub and Dashboard](https://coronavirus.jhu.edu/map.html)
-- [US Census Bureau](https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.html)
-- ...
 
 
 ---

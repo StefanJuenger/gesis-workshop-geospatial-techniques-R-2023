@@ -823,11 +823,11 @@ fake_survey_data_spatial %>%
 ---
 
 class: middle
-## Exercise 2_2_1 (optional!): Spatial Joins
+## Exercise 2_2_1: Spatial Joins
 
-[Exercise](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/2_2_1_Spatial_Joins_OPTIONAL.html)
+[Exercise](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/2_2_1_Spatial_Joins.html)
 
-[Solution](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/2_2_1_Spatial_Joins_OPTIONAL.html)
+[Solution](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/2_2_1_Spatial_Joins.html)
 
 
 ---

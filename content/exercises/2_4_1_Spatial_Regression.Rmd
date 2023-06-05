@@ -1,0 +1,166 @@
+---
+title: 'Exercise 2_3_2: Spatial Regression'
+author: 'Stefan Jünger & Anne-Kathrin Stroppe'
+date: 'Introduction to Geospatial Techniques for Social Scientists in R'
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r knitr_init, echo=FALSE, cache=FALSE, include=FALSE}
+# custom boxes
+knitr::opts_template$set(
+  clues = list(box.title = "Clues",
+               box.body = list(fill = "#fff9dc", colour = "black"),
+               box.header = list(fill = "#ffec8b", colour = "black"),
+               box.icon = "fa-search",
+               box.collapse = TRUE)
+)
+```
+
+```{r klippy, echo=FALSE, include=TRUE}
+klippy::klippy()
+```
+
+Let's see how different neighborhood matrix styles can impact the estimates of spatial regression models. Run the code below in order to have the data in place for this exercises. (You can ignore any warning messages.)
+
+```{r compile-data, include = FALSE}
+
+voting_districts <-
+  sf::st_read("./data/Stimmbezirk.shp") %>%
+  sf::st_transform(3035)  %>% 
+  dplyr::transmute(Stimmbezirk = as.numeric(nummer))
+
+afd_votes <-
+  glue::glue(
+    "https://www.stadt-koeln.de/wahlen/bundestagswahl/09-2021/praesentation/\\
+    Open-Data-Bundestagswahl476.csv"
+  ) %>% 
+  readr::read_csv2() %>%
+  dplyr::transmute(Stimmbezirk = `gebiet-nr`, afd_share = (F1 / F) * 100)
+
+election_results <-
+  dplyr::left_join(
+    voting_districts,
+    afd_votes,
+    by = "Stimmbezirk"
+  )
+
+immigrants_cologne <-
+  z11::z11_get_100m_attribute(STAATSANGE_KURZ_2) %>%
+  terra::crop(election_results) %>%
+  terra::mask(terra::vect(election_results))
+
+
+inhabitants_cologne <-
+  z11::z11_get_100m_attribute(Einwohner) %>%
+  terra::crop(election_results) %>%
+  terra::mask(terra::vect(election_results))
+
+immigrant_share_cologne <-
+  (immigrants_cologne / inhabitants_cologne) * 100
+
+election_results <-
+  election_results %>%
+  dplyr::mutate(
+    immigrant_share = 
+      exactextractr::exact_extract(immigrant_share_cologne, ., 'mean'),
+    inhabitants = 
+      exactextractr::exact_extract(inhabitants_cologne, ., 'mean')
+  )
+
+```
+
+```{r compile-data-show, eval = FALSE}
+
+voting_districts <-
+  sf::st_read("./data/Stimmbezirk.shp") %>%
+  sf::st_transform(3035)  %>% 
+  dplyr::transmute(Stimmbezirk = as.numeric(nummer))
+
+afd_votes <-
+  glue::glue(
+    "https://www.stadt-koeln.de/wahlen/bundestagswahl/09-2021/praesentation/\\
+    Open-Data-Bundestagswahl476.csv"
+  ) %>% 
+  readr::read_csv2() %>%
+  dplyr::transmute(Stimmbezirk = `gebiet-nr`, afd_share = (F1 / F) * 100)
+
+election_results <-
+  dplyr::left_join(
+    voting_districts,
+    afd_votes,
+    by = "Stimmbezirk"
+  )
+
+immigrants_cologne <-
+  z11::z11_get_100m_attribute(STAATSANGE_KURZ_2) %>%
+  terra::crop(election_results) %>%
+  terra::mask(terra::vect(election_results))
+
+
+inhabitants_cologne <-
+  z11::z11_get_100m_attribute(Einwohner) %>%
+  terra::crop(election_results) %>%
+  terra::mask(terra::vect(election_results))
+
+immigrant_share_cologne <-
+  (immigrants_cologne / inhabitants_cologne) * 100
+
+election_results <-
+  election_results %>%
+  dplyr::mutate(
+    immigrant_share = 
+      exactextractr::exact_extract(immigrant_share_cologne, ., 'mean'),
+    inhabitants = 
+      exactextractr::exact_extract(inhabitants_cologne, ., 'mean')
+  )
+
+```
+
+```{block, box.title = "1", box.body = list(fill = "white"), box.icon = "fa-star"}
+Re-use the code from the previous exercise for the Queen neighborhoods. But this time do one weight matrix with row-normalization and another one with minmax-normalization. Insert them into two spatial regression lag models of your choice using the same variables as in the lecture, i.e., both of them should either be a Spatial Lag Y or Spatial Lag X model.
+```
+
+```{block, opts.label = "clues"}
+For minmax-normalization, you would have to use the option `style = "minmax"` in the `spdep:nb2listw()` function.
+```
+
+```{r first, solution = TRUE}
+# spdep
+queen_neighborhood <-
+  spdep::poly2nb(
+    election_results,
+    queen = TRUE
+  )
+
+queen_W <- spdep::nb2listw(queen_neighborhood, style = "W")
+
+queen_minmax <- spdep::nb2listw(queen_neighborhood, style = "minmax")
+
+# run regressions
+spatial_lag_y_W <-
+  spatialreg::lagsarlm(
+    afd_share ~ immigrant_share + inhabitants,
+    data = election_results,
+    listw = queen_W
+    )
+
+spatial_lag_y_minmax <-
+  spatialreg::lagsarlm(
+    afd_share ~ immigrant_share + inhabitants,
+    data = election_results,
+    listw = queen_minmax
+    )
+```
+
+```{block, box.title = "2", box.body = list(fill = "white"), box.icon = "fa-star"}
+Calculate the impacts of both models. What is your observation?
+```
+
+```{r second, solution = TRUE}
+spatialreg::impacts(spatial_lag_y_W, listw = queen_W)
+spatialreg::impacts(spatial_lag_y_minmax, listw = queen_minmax)
+
+# There are some slight differences in the estimate of the indirect effects but
+# more severe one in the calculation of the direct ones.
+```
