@@ -511,15 +511,15 @@ election_results %$%
 class: middle 
 ## Exercise 2_3_1: Neighborhood Matrices
 
-[Exercise](https://stefanjuenger.github.io/gis_socsci_konstanz/exercises/2_3_1_Neighborhood_Matrices.html)
+[Exercise](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/2_3_1_Neighborhood_Matrices.html)
 
-[Solution](https://stefanjuenger.github.io/gis_socsci_konstanz/solutions/2_3_1_Neighborhood_Matrices.html)
+[Solution](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/solutions/2_3_1_Neighborhood_Matrices.html)
 
 ---
 
 ## Measures of local spatial autocorrelation: LISA clusters
 
-The reason why I show you the `sfdep` package is that it provides nice functions to calculate *local* measures of spatial autocorrelation. One popular choice are the estimation of Local Indicators of Spatial Autocorrelation (i.e., LISA clusters). In the most straightforward way they can be interpreted as case-specific indicators of spatial autocorrelation:
+The reason why we show you the `sfdep` package is that it provides nice functions to calculate *local* measures of spatial autocorrelation. One popular choice are the estimation of Local Indicators of Spatial Autocorrelation (i.e., LISA clusters). In the most straightforward way they can be interpreted as case-specific indicators of spatial autocorrelation:
 
 $$I_i=\frac{x_i-\bar{x}}{\frac{\sum_{i-1}^N(x_i-\bar{x})^2}{N}}\sum_{j=1}^Nw_{ij}(x_j-\bar{x})$$
 
