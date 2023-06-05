@@ -280,9 +280,7 @@ In the folder called `./data` in the same folder as the other materials for this
 
 - German Census 2011 data are provided by the [Federal Statistical Office Germany, Wiesbaden 2020](https://www.zensus2011.de/EN/Home/home_node.html)
 
-- Shapefiles, voting data, and Covid cases for Cologne are gathered from the [Open Data Portal Cologne](https://www.offenedaten-koeln.de/)
-
-- Raster data on land use are provided by the Leibniz [Institute of Ecological Urban and Regional Development](https://www.ioer.de/1/home/) through the [Monitor of Settlement and Open Space Development (IOER Monitor)](https://www.ioer-monitor.de/en/)
+- Shapefiles, voting data, neighborhood complaints data, and Covid cases for Cologne are gathered from the [Open Data Portal Cologne](https://www.offenedaten-koeln.de/)
 
 **Please make sure that if you reuse any of the provided data to cite the original data sources.**
 
@@ -600,65 +598,6 @@ x %>%
 ```
 
 More details: https://r4ds.had.co.nz/pipes.html
-
----
-
-## Some Precocious Notes on Style
-.pull-left[
-In some ways, writing code is similar to writing a novel; it's a craft where you set the tone of how you want to be perceived by your future-you and others.
-  
-What helps to be understood is the styling of your code.
-]
-
-.pull-right[
-```{r out.width = "70%", echo = FALSE}
-woRkshoptools::include_picture("on_writing_king.jpg")
-```
-.tinyisher[https://images-na.ssl-images-amazon.com/images/I/71z4varBITL.jpg]
-]
-
----
-
-## General Elements of Style
-These are only some of the topics you will face when researching for styling your code.
-- line length (see the ["sacred 80 column rule"]( https://www.emacswiki.org/emacs/EightyColumnRule))
-- indentions
-- variable/object naming
-- comments
-- assignment rules
-
-`R` is pretty flexible in styling, which is why it is necessary to think about these topics
-- compare that to `Python`, which has strict indention rules
-
----
-
-## Style Guides out There
-It's not uncommon to follow a specific style guide that already exists.
-
-Many institutions define styles for several different programming languages, such as [Google's style guide for `R`](https://google.github.io/styleguide/Rguide.html)
-
-It doesn't matter what style you use as long as you are consistent (at least in one single `R`-file, right?).
-
----
-
-## Coding in Style `r emo::ji("sunglasses")`
-
-[The `tidyverse` style guide](https://style.tidyverse.org/) by Hadley Wickham  
-  
-[`styler`](http://styler.r-lib.org/) package (incl. RStudio add-in)
-
-```{r install & load styler, eval = F, echo = T}
-install.packages("styler")
-library(styler)
-```
-
-From the package documentation:
-- `style_file()` styles .R and/or .Rmd files.
-- `style_dir()` styles all .R and/or .Rmd files in a directory.
-
-```{r, out.width = "50%", echo = FALSE}
-woRkshoptools::include_picture("styler_addin.png")
-```
 
 ---
 
