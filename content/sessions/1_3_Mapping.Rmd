@@ -965,7 +965,6 @@ Wahlentscheidung bei der Bundestagswahl 2021? easy_social_sciences, 67, 49-60.
 https://doi.org/10.15464/easy.2022.07
 ]
 
-tinyisher[
 ```{r btw-21_map_code, eval = F}
 
 # With Credits to Nils Jungmann
@@ -1239,7 +1238,6 @@ all_btwshare_map
 # tmap_save(all_btwshare_map, filename = "party_vote_shares_district_map.eps", dpi = 600)
 
 ```
-]
 
 ---
 
