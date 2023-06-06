@@ -73,7 +73,7 @@ names(germany) # Name, Area Type, Area Size, Population Size ,...
 ```
 
 ```{block, box.title = "3", box.body = list(fill = "white"), box.icon = "fa-star"}
-Do you have an idea why there are 11 observations instead of only one, even though we expected a shapefile with a polygon of just Germany?
+Do you have an idea why there are 34 observations instead of only 16, even though we expected a shapefile with a polygon of just Germany?
 Create a new object which contains only one observation filtered by the variable `GF == 4`.
 ```
 
