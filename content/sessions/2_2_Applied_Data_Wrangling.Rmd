@@ -90,6 +90,8 @@ That‘s one of the biggest issues
 
 .center[**Affects all phases of research and data management!**]
 
+---
+
 ## Data Availability
 
 .pull-left[
@@ -118,7 +120,7 @@ https://datasetsearch.research.google.com/
 
 ## Distribution & Re-Identification Risk
 
-Data may still be sensitive
+Even without (in)direct spatial references, data may still be sensitive
 - Geospatial attributes add new information to existing data
 - May be part of general data privacy checks, but we may not distribute these data as is
 
@@ -195,7 +197,7 @@ woRkshoptools::include_picture("bkggeocoder.png")
 ## Spatial Linking
 
 .pull-left[
-Geocoding tool retrieves automatically point coordinates, administrative unit keys and INSPIRE* grid cell ids.
+Geocoding tool retrieves automatically point coordinates, administrative unit keys and INSPIRE grid cell ids.
 
 Spatial joins based on coordinates for other units:
 
@@ -300,7 +302,7 @@ woRkshoptools::include_picture("4iq3kg.jpg")
 
 .pull-left[
 ```{r get-nrw}
-nrw <-
+sampling_area <-
   osmdata::getbb(
     "Nordrhein-Westfalen", 
     format_out = "sf_polygon"
@@ -443,23 +445,23 @@ When all data sets are loaded, we reduced our sample to the area North Rhine Wes
 
 ```{r load-data-hidden, echo = F, warning = F, message = F}
 
-sampling_area_districts <-
-  sf::read_sf("./data/VG250_KRS.shp") %>% 
-  sf::st_transform(3035) %>% 
-  # reduce to area of nrw: x lies within y
-  sf::st_join(.,
-              sampling_area, 
-              join = sf::st_intersects, 
-              left = FALSE) %>% 
-  # select and rename columns
-  dplyr::rename(district_id = AGS) %>% 
-  dplyr::select(district_id)
-
-attributes_districts <- readr::read_csv("./data/attributes_districts.csv")
- 
 sampling_area_districts_enhanced <-
-  sampling_area_districts %>% 
-  dplyr::left_join(attributes_districts, by = "district_id" )
+  # load district shapefile
+  sf::read_sf("./data/VG250_KRS.shp") %>% 
+  # transform crs
+  sf::st_transform(3035) %>% 
+  # some data cleaning
+  dplyr::rename(district_id = AGS) %>% 
+  dplyr::select(district_id) %>% 
+  # left join attributes
+  dplyr::left_join(. , 
+                   readr::read_csv("./data/attributes_districts.csv"), 
+                   by = "district_id" ) %>% 
+# reduce to area of nrw: x intersects y
+sf::st_join(.,
+            sampling_area, 
+            join = sf::st_intersects, 
+            left = FALSE)
 
 hospitals <-
   readr::read_csv("./data/hospital_points.csv") %>%
@@ -478,22 +480,23 @@ sampling_area_hospitals <-
 
 ```{r prep_data, eval = F}
 
-# reduce sample
 sampling_area_districts_enhanced <-
-  # load shapefile
+  # load district shapefile
   sf::read_sf("./data/VG250_KRS.shp") %>% 
-  # adjust crs
+  # transform crs
   sf::st_transform(3035) %>% 
-  # add attributes
-  dplyr::left_join(attributes_districts, by = "district_id" ) %>% 
-  # reduce to area of nrw: x lies within y
-  sf::st_join(.,
-              sampling_area, 
-              join = sf::st_intersects, 
-              left = FALSE) %>% 
-  # select and rename columns
+  # some data cleaning
   dplyr::rename(district_id = AGS) %>% 
-  dplyr::select(district_id)
+  dplyr::select(district_id) %>% 
+  # left join attributes
+  dplyr::left_join(. , 
+                   readr::read_csv("./data/attributes_districts.csv"), 
+                   by = "district_id" ) %>% 
+# reduce to area of nrw: x lies within y
+sf::st_join(.,
+            sampling_area, 
+            join = sf::st_intersects, 
+            left = FALSE)
 
 
 ```
@@ -557,6 +560,76 @@ sampling_area_districts_enhanced <-
 tm_shape(sampling_area_districts_enhanced) +
   tm_fill("pop_dens", breaks = c(0,100,200,400,800,1600,3200, Inf))+
   tm_layout(legend.outside = TRUE)
+```
+]
+
+---
+
+## Aggregate Data 
+
+Squeezing in a small example on data aggregation. If you do not have id information or additional shapefiles, you can rely on `st_combine(x)` , `st_union(x,y)` and `st_intersection(x,y)` to combine shapefiles, resolve borders and return the intersection of two shapefiles. 
+
+
+.pull-left[
+```{r aggregate-data}
+
+# load data
+german_states <- 
+  sf::read_sf("./data/VG250_LAN.shp") %>% 
+  sf::st_transform(3035) %>% 
+  dplyr::filter(GF == 4) %>% 
+  dplyr::rename(state_id = AGS) %>% 
+  dplyr::select(state_id)
+
+german_districts <-
+  sf::read_sf("./data/VG250_KRS.shp") %>% 
+  sf::st_transform(3035) %>% 
+  dplyr::rename(district_id = AGS) %>% 
+  dplyr::select(district_id) %>% 
+  dplyr::left_join(. , 
+                   readr::read_csv("./data/attributes_districts.csv"), 
+                   by = "district_id" )
+
+
+```
+]
+
+.pull-right[
+```{r aggregate-data2}
+# the 'dplyr way' 
+district_aggregated_by_state <-
+  st_join(german_districts,
+          german_states, 
+          join = sf::st_intersects,
+          left = TRUE) %>%
+  group_by(state_id) %>% 
+  dplyr::summarise(state_death_rate = 
+              sum(death_rate,
+                  na.rm = TRUE))
+
+
+```
+]
+
+---
+
+## Aggregate Data
+
+.pull-left[
+```{r show-aggregation-code, eval=FALSE}
+
+tm_shape(district_aggregated_by_state) +
+  tm_polygons(col = "state_death_rate")
+
+```
+]
+
+.pull-right[
+```{r show-aggregation, echo=FALSE}
+
+tm_shape(district_aggregated_by_state) +
+  tm_polygons(col = "state_death_rate")
+
 ```
 ]
 
@@ -642,7 +715,7 @@ sf::st_distance(
 ## Find Minimum Distance
 
 That's all there is concerning the "spatial" part of our data wrangling. 
-From now on, just good old (boring) data crunching to get our distance to the closest hospital.
+From now on, just good old data crunching to get our distance to the closest hospital.
 
 .pull-left[
 ```{r closest-hosp-disp, eval = F}
@@ -655,7 +728,8 @@ distance_closest <-
     dplyr::mutate(dist_closest_hospital = 
                   (apply(., 1, min))) %>%  
     # get kilometer instead of meter
-    dplyr::mutate(dist_closest_hospital = dist_closest_hospital/1000 ) %>%
+    dplyr::mutate(dist_closest_hospital = 
+                    dist_closest_hospital/1000 ) %>%
     # select only column 
     # containing smallest distance
     dplyr::select(dist_closest_hospital)
@@ -723,16 +797,21 @@ head(spatial_information,6)
 
 ...and we're not yet done: we still need the immigrant rate in the neighborhood. Let's calculate buffers of 500 meters and add their mean values to our dataset.
 
-
 ```{r load-link-data, include = FALSE}
-# download data & create rate
 
-immigrants <- 
-  z11::z11_get_100m_attribute(STAATSANGE_KURZ_2)
-inhabitants <-
+# download data & create rate
+immigrants_nrw <- 
+  z11::z11_get_100m_attribute(STAATSANGE_KURZ_2) %>% 
+  terra::crop(. , sampling_area)
+
+inhabitants_nrw <-
   z11::z11_get_100m_attribute(Einwohner) %>% 
-  terra::resample(immigrants)
-immigrant_rate <- immigrants / inhabitants * 100
+  terra::crop(. , sampling_area)
+
+immigrant_rate <-
+  immigrants_nrw * 100 / 
+  inhabitants_nrw
+
 # calculate immigrant rate for 500m buffer
 immigrant_buffers <- 
 terra::extract(
@@ -750,15 +829,29 @@ spatial_information <-
 
 ```
 
-```{r load-link-noeval, eval = FALSE}
+
+.pull-left[
+```{r load-noeval, eval = FALSE}
 
 # download data & create rate
-immigrants <- 
-  z11::z11_get_100m_attribute(STAATSANGE_KURZ_2)
-inhabitants <-
+immigrants_nrw <- 
+  z11::z11_get_100m_attribute(STAATSANGE_KURZ_2) %>% 
+  terra::crop(. , sampling_area)
+
+inhabitants_nrw <-
   z11::z11_get_100m_attribute(Einwohner) %>% 
-  terra::resample(immigrants)
-immigrant_rate <- immigrants / inhabitants * 100
+  terra::crop(. , sampling_area)
+
+immigrant_rate <-
+  immigrants_nrw * 100 / 
+  inhabitants_nrw
+
+```
+]
+
+.pull-right[
+```{r link-noeval, eval = FALSE}
+
 # calculate immigrant rate for 500m buffer
 immigrant_buffers <- 
 terra::extract(
@@ -767,7 +860,9 @@ terra::extract(
     sf::st_buffer(500) %>% 
     terra::vect(), 
   fun = mean,
-  na.rm = TRUE
+  na.rm = TRUE,
+  ID = FALSE,
+  raw = TRUE
   )
 # spatially link with buffers on the fly
 spatial_information <-
@@ -775,6 +870,7 @@ spatial_information <-
   dplyr::mutate(immigrant_buffers = immigrant_buffers[[2]])
 
 ```
+]
 
 ```{r save-secret-data, echo = FALSE, include = FALSE}
 saveRDS(spatial_information, "./data/secrect_data.rds")
