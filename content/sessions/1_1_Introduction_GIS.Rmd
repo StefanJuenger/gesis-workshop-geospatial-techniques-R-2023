@@ -328,14 +328,14 @@ Coordinate reference systems
 
 .pull-left[
 .center[
-**Projected CRS**
+**Geographic CRS**
 (EPSG:3857)
 ]
 ]
 
 .pull-right[
 .center[
-**Geographic CRS**
+**Projected CRS**
 (EPSG:3035)
 ]
 ]
@@ -358,7 +358,7 @@ woRkshoptools::include_picture("fig_projections.png")
 - projection of geometries on a (flat) surface
 - straight lines become bent lines
 
-(There are also geocentric CRS requiring also a z-coordinate...)
+(There are also geocentric CRS requiring a z-coordinate...)
 
 *In practice, you shouldn't worry too much about CRS. Again, what matters is that they match.*
 
