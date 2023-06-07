@@ -239,9 +239,9 @@ tm_shape(cologne_pt_stops_densities) +
 class: middle
 ## Exercise 2_1_1: Working with OSM Data
 
-[Exercise](https://stefanjuenger.github.io/gis_socsci_konstanz/exercises/2_1_1_Working_with_OSM_data.html)
+[Exercise](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/2_1_1_Working_with_OSM_data.html)
 
-[Solution](https://stefanjuenger.github.io/gis_socsci_konstanz/solutions/2_1_1_Working_with_OSM_data.html)
+[Solution](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/solutions/2_1_1_Working_with_OSM_data.html)
 
 ---
 
@@ -518,9 +518,9 @@ tm_shape(immigrants_germany) +
 class: middle 
 ## Exercise 2_1_2: Wrangling the German Census
 
-[Exercise](https://stefanjuenger.github.io/gis_socsci_konstanz/exercises/2_1_2_Wrangling_the_German_Census.html)
+[Exercise](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/exercises/2_1_2_Wrangling_the_German_Census.html)
 
-[Solution](https://stefanjuenger.github.io/gis_socsci_konstanz/solutions/2_1_2_Wrangling_the_German_Census.html)
+[Solution](https://stefanjuenger.github.io/gesis-workshop-geospatial-techniques-R-2023/solutions/2_1_2_Wrangling_the_German_Census.html)
 
 
 <!-- STOP WITH SLIDES HERE -->
