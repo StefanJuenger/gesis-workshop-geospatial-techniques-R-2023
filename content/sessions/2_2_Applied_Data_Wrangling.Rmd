@@ -279,6 +279,16 @@ woRkshoptools::include_picture("fig_linking_buffer_sealing.png")
 
 ---
 
+## Cheatsheet: Spatial Operations
+
+An overview of spatial operations using the `sf` package can be accessed [here](https://ugoproto.github.io/ugo_r_doc/pdf/sf.pdf).
+
+```{r pic-cheatsheet, echo = FALSE, out.width = "75%"}
+woRkshoptools::include_picture("cheatsheet.png")
+```
+
+---
+
 ## Fake Research Question
 
 .pull-left[
